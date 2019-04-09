@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Bitstream</name>
+    </assembly>
+    <members>
+        <member name="T:emotitron.Compression.Bitstream">
+            <summary>
+            A mini-bitpacker (up to 40 bytes) used for storing compressed transforms. Contains methods for basic Serialization.
+            </summary>
+        </member>
+        <member name="P:emotitron.Compression.Bitstream.BytesUsed">
+            <summary>
+            Returns the rounded up number of bytes currently used, based on the position of the WritePtr.
+            </summary>
+        </member>
+        <member name="P:emotitron.Compression.Bitstream.ReadPtrBytePosition">
+            <summary>
+            Returns how many bytes have been read, rounded up to the nearest byte. If 0 bits have been read, this will be zero. If 9 bits have been read, this will be 2.
+            </summary>
+        </member>
+        <member name="M:emotitron.Compression.Bitstream.BitsUsedByFragment(System.Int32,System.Int32)">
+            <summary>
+            Returns how many bits of the fragment index are used given the total bits
+            </summary>
+            <param name="fragment"></param>
+            <param name="totalbits"></param>
+            <returns></returns>
+        </member>
+        <member name="M:emotitron.Compression.Bitstream.GetByte(System.Int32)">
+            <summary>
+            Read out the byte[] index equivalent. Interally the bitstream is Fixed ulong[5].
+            </summary>
+            <param name="arrayIndex"></param>
+            <returns></returns>
+        </member>
+        <member name="M:emotitron.Compression.Bitstream.Write(emotitron.Compression.Bitstream)">
+            <summary>
+            Writes the bits of src bitstream (from 0 to WritePtr) into this bitstream. NOTE this method is the worst choice. When possible use 'Write(ref src)'
+            or 'crusher.Write(value, ref bitstream)'. 
+            </summary>
+            <param name="src"></param>
+        </member>
+        <member name="M:emotitron.Compression.Bitstream.Write(emotitron.Compression.Bitstream@)">
+            <summary>
+            Writes the bits of src bitstream (from 0 to WritePtr) into this bitstream. NOTE this method is the BEST choice. Passing bitstream as a ref when possible
+            avoids a 48 byte struct allocation.
+            </summary>
+            <param name="src"></param>
+        </member>
+        <member name="M:emotitron.Compression.Bitstream.Compare(emotitron.Compression.Bitstream,emotitron.Compression.Bitstream)">
+            <summary>
+            When possible, use Compare(ref Bitstream a, ref Bitstream b). Bitstream is a 40byte struct, so it is best to pass by ref when possible.
+            </summary>
+            <returns>true if the bitstreams match.</returns>
+        </member>
+        <member name="M:emotitron.Compression.Bitstream.Compare(emotitron.Compression.Bitstream@,emotitron.Compression.Bitstream@)">
+            <summary>
+            This is the preferred overload for Compare().
+            </summary>
+            <returns>true if the bitstreams match.</returns>
+        </member>
+        <member name="T:emotitron.Compression.PackedValue">
+            <summary>
+            A simple wrapper for unsigned ints, which also contains how many bits that value is packed down to.
+            </summary>
+        </member>
+    </members>
+</doc>
