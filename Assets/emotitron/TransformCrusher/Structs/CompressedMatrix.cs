@@ -75,9 +75,9 @@ namespace emotitron.Compression
 
 		#region AsArray
 
-		private static readonly ulong[] reusableArray64 = new ulong[6];
-		private static readonly uint[] reusableArray32 = new uint[12];
-		private static readonly byte[] reusableArray8 = new byte[24];
+		protected static readonly ulong[] reusableArray64 = new ulong[6];
+		protected static readonly uint[] reusableArray32 = new uint[12];
+		protected static readonly byte[] reusableArray8 = new byte[24];
 
 		// 64
 		/// <summary>

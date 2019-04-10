@@ -64,9 +64,9 @@ namespace emotitron.Compression
 		public Transform defaultTransform;
 
 		// Set up the default Crushers so they add up to 64 bits
-		[SerializeField] private ElementCrusher posCrusher;
-		[SerializeField] private ElementCrusher rotCrusher;
-		[SerializeField] private ElementCrusher sclCrusher;
+		[SerializeField] protected ElementCrusher posCrusher;
+		[SerializeField] protected ElementCrusher rotCrusher;
+		[SerializeField] protected ElementCrusher sclCrusher;
 
 
 		/// <summary>
@@ -161,7 +161,7 @@ namespace emotitron.Compression
 			ConstructDefault(isStatic);
 		}
 
-		private void ConstructDefault(bool isStatic = false)
+		protected virtual void ConstructDefault(bool isStatic = false)
 		{
 			if (isStatic)
 			{
@@ -195,7 +195,7 @@ namespace emotitron.Compression
 #if UNITY_EDITOR
 #pragma warning disable 0414
 		[SerializeField]
-		private bool isExpanded = true;
+		protected bool isExpanded = true;
 #pragma warning restore 0414
 #endif
 
@@ -208,15 +208,15 @@ namespace emotitron.Compression
 		#region Cached compression values
 
 
-		[NonSerialized] private readonly int[] cached_pBits = new int[4];
-		[NonSerialized] private readonly int[] cached_rBits = new int[4];
-		[NonSerialized] private readonly int[] cached_sBits = new int[4];
-		[NonSerialized] private readonly int[] _cached_total = new int[4];
+		[NonSerialized] protected readonly int[] cached_pBits = new int[4];
+		[NonSerialized] protected readonly int[] cached_rBits = new int[4];
+		[NonSerialized] protected readonly int[] cached_sBits = new int[4];
+		[NonSerialized] protected readonly int[] _cached_total = new int[4];
 		public ReadOnlyCollection<int> cached_total;
 
-		private bool cached;
+		protected bool cached;
 
-		public void CacheValues()
+		public virtual void CacheValues()
 		{
 			for (int i = 0; i < 4; ++i)
 			{
@@ -233,7 +233,7 @@ namespace emotitron.Compression
 
 		#endregion
 
-		#region Byte[] Writers
+		#region Array Writers
 
 		public void Write(CompressedMatrix cm, byte[] buffer, ref int bitposition, BitCullingLevel bcl = BitCullingLevel.NoCulling)
 		{
@@ -311,9 +311,7 @@ namespace emotitron.Compression
 
 		#endregion
 
-
-
-		#region Byte[] Readers
+		#region Array Readers
 
 		//[System.Obsolete()]
 		public Matrix ReadAndDecompress(ulong[] array, BitCullingLevel bcl = BitCullingLevel.NoCulling)
@@ -1328,7 +1326,7 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Get the total number of bits this Transform is set to write.
 		/// </summary>
-		public int TallyBits(BitCullingLevel bcl = BitCullingLevel.NoCulling)
+		public virtual int TallyBits(BitCullingLevel bcl = BitCullingLevel.NoCulling)
 		{
 			int p = posCrusher != null ? posCrusher.TallyBits(bcl) : 0;
 			int r = posCrusher != null ? rotCrusher.TallyBits(bcl) : 0;
