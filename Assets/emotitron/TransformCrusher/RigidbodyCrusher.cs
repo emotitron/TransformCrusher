@@ -339,13 +339,10 @@ namespace emotitron.Compression
 
 
 
-
-
-
 		/// <summary>
 		/// Get the total number of bits this Transform is set to write.
 		/// </summary>
-		public override int TallyBits(BitCullingLevel bcl = BitCullingLevel.NoCulling)
+		public new int TallyBits(BitCullingLevel bcl = BitCullingLevel.NoCulling)
 		{
 			int tally = base.TallyBits(bcl);
 			int v = velCrusher != null ? velCrusher.TallyBits(bcl) : 0;
