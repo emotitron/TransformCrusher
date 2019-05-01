@@ -76,18 +76,20 @@ namespace emotitron.Compression.Sample
 			/// This does that.
 			XDebug.ForwardTraceListener(true);
 			XDebug.RedirectConsoleErrorToDebug(true);
+
+			/// Register our methods as Unet Msg Receivers
+			NetMsgCallbacks.RegisterHandler(CLIENT_SND_ID, OnServerRcv);
+			NetMsgCallbacks.RegisterHandler(SERVER_SND_ID, OnClientRcv);
 		}
 
-#if !PUN_2_OR_NEWER
-		public override void OnStartServer() { NetMsgCallbacks.RegisterHandler(CLIENT_SND_ID, OnServerRcv, true); }
-		public override void OnStartClient() { NetMsgCallbacks.RegisterHandler(SERVER_SND_ID, OnClientRcv, false); }
-#endif
+//#if !PUN_2_OR_NEWER
+//		public override void OnStartServer() { NetMsgCallbacks.RegisterHandler(CLIENT_SND_ID, OnServerRcv, true); }
+//		public override void OnStartClient() { NetMsgCallbacks.RegisterHandler(SERVER_SND_ID, OnClientRcv, false); }
+//#endif
 
 		private void Start()
 		{
-			/// Register our methods as Unet Msg Receivers
-			NetMsgCallbacks.RegisterHandler(CLIENT_SND_ID, OnServerRcv, true);
-			NetMsgCallbacks.RegisterHandler(SERVER_SND_ID, OnClientRcv, false);
+			
 
 			/// Add this component to the dictionary of netobjects. Netid is used as the key.
 #if PUN_2_OR_NEWER
@@ -102,11 +104,8 @@ namespace emotitron.Compression.Sample
 			if (players.ContainsKey(NetId))
 				players.Remove(NetId);
 
-			if (UsingPUN)
-			{
-				NetMsgCallbacks.UnregisterHandler(CLIENT_SND_ID, OnServerRcv, true);
-				NetMsgCallbacks.UnregisterHandler(SERVER_SND_ID, OnClientRcv, false);
-			}
+			NetMsgCallbacks.UnregisterHandler(CLIENT_SND_ID, OnServerRcv);
+			NetMsgCallbacks.UnregisterHandler(SERVER_SND_ID, OnClientRcv);
 		}
 
 		/// ------------------------------------------------------------------------------------------------------
