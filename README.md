@@ -1,7 +1,7 @@
 ![Header](https://github.com/emotitron/NetworkSyncTransform/blob/master/Docs/img/TC_DocumentHeader.jpg?raw=true)
 # Transform Crusher
 
-[**Transform Crusher Free 3.5.0** - Unity Package Download](https://github.com/emotitron/TransformCrusher/releases/download/3.5.01/TC_RELEASE_3501.unitypackage)
+[**Transform Crusher Free 3.5.01** - Unity Package Download](https://github.com/emotitron/TransformCrusher/releases/download/3.5.01/TC_RELEASE_3501.unitypackage)
 
 Selectively compress, bitpack and serialize any transform, position, rotation, scale or float values for network transmission, Works with any networking library (UNET,/Mirror, Photon, Forge, etc). Transform Crusher encodes floats using a fixed range (min and max possible values) and a desired precision or bit target. Typically results in 50% to 75% reductions in data sizes. Half-float, smallest three quaternion compression, and uncompressed options are also available.
 
@@ -10,7 +10,7 @@ Selectively compress, bitpack and serialize any transform, position, rotation, s
 ## Transform Crusher FREE Download
 You are welcome to use this library for games, however scripts/components not explicity marked with MIT licenses may not sold be part of assets libraries.
 
-[**Transform Crusher Free 3.5.0** - Unity Package Download](https://github.com/emotitron/TransformCrusher/releases/download/3.5.01/TC_RELEASE_3501.unitypackagee)
+[**Transform Crusher Free 3.5.01** - Unity Package Download](https://github.com/emotitron/TransformCrusher/releases/download/3.5.01/TC_RELEASE_3501.unitypackagee)
 
 ## Transform Crusher PRO on Unity Asset Store
 Offers bit level control of the compression settings, rather than just the presets.
