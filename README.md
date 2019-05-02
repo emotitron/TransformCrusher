@@ -10,7 +10,7 @@ Selectively compress, bitpack and serialize any transform, position, rotation, s
 ## Transform Crusher FREE Download
 You are welcome to use this library for games, however scripts/components not explicity marked with MIT licenses may not sold be part of assets libraries.
 
-[**Transform Crusher Free 3.5.0** - Unity Package Download](https://github.com/emotitron/TransformCrusher/releases/download/3.5.01/TC_RELEASE_3501.unitypackage)
+[**Transform Crusher Free 3.5.0** - Unity Package Download](https://github.com/emotitron/TransformCrusher/releases/download/3.5.01/TC_RELEASE_3501.unitypackagee)
 
 ## Transform Crusher PRO on Unity Asset Store
 Offers bit level control of the compression settings, rather than just the presets.
