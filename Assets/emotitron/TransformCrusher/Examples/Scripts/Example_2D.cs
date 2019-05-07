@@ -8,8 +8,8 @@ using emotitron.Utilities.Networking;
 
 #if PUN_2_OR_NEWER
 using Photon.Pun;
-//#elif MIRROR
-//using Mirror;
+#elif MIRROR
+using Mirror;
 #else
 using UnityEngine.Networking;
 #endif
@@ -33,8 +33,7 @@ namespace emotitron.Compression.Sample
 		/// The lookup table for finding which net object incoming updates belong to.
 		public static Dictionary<int, Example_2D> players = new Dictionary<int, Example_2D>();
 
-		public const byte CLIENT_SND_ID = 222;
-		public const byte SERVER_SND_ID = 223;
+		public const byte SND_ID = 223;
 
 		/// Reference to the crusher we are using for the IHasTransformCrusher interface.
 		/// This is used by the BasicController to get the bounds of our crusher to clamp movement.
@@ -76,20 +75,17 @@ namespace emotitron.Compression.Sample
 			/// This does that.
 			XDebug.ForwardTraceListener(true);
 			XDebug.RedirectConsoleErrorToDebug(true);
-
-			/// Register our methods as Unet Msg Receivers
-			NetMsgCallbacks.RegisterHandler(CLIENT_SND_ID, OnServerRcv);
-			NetMsgCallbacks.RegisterHandler(SERVER_SND_ID, OnClientRcv);
 		}
 
-//#if !PUN_2_OR_NEWER
-//		public override void OnStartServer() { NetMsgCallbacks.RegisterHandler(CLIENT_SND_ID, OnServerRcv, true); }
-//		public override void OnStartClient() { NetMsgCallbacks.RegisterHandler(SERVER_SND_ID, OnClientRcv, false); }
-//#endif
+#if !PUN_2_OR_NEWER
+		public override void OnStartServer() { NetMsgCallbacks.RegisterHandler(SND_ID, OnMessage); }
+		public override void OnStartClient() { NetMsgCallbacks.RegisterHandler(SND_ID, OnMessage); }
+#endif
 
 		private void Start()
 		{
-			
+			/// Register our methods as Unet Msg Receivers
+			NetMsgCallbacks.RegisterHandler(SND_ID, OnMessage);
 
 			/// Add this component to the dictionary of netobjects. Netid is used as the key.
 #if PUN_2_OR_NEWER
@@ -104,8 +100,10 @@ namespace emotitron.Compression.Sample
 			if (players.ContainsKey(NetId))
 				players.Remove(NetId);
 
-			NetMsgCallbacks.UnregisterHandler(CLIENT_SND_ID, OnServerRcv);
-			NetMsgCallbacks.UnregisterHandler(SERVER_SND_ID, OnClientRcv);
+			if (UsingPUN)
+			{
+				NetMsgCallbacks.UnregisterHandler(SND_ID, OnMessage);
+			}
 		}
 
 		/// ------------------------------------------------------------------------------------------------------
@@ -136,9 +134,12 @@ namespace emotitron.Compression.Sample
 		/// ------------------------------------------------------------------------------------------------------
 		/// 3. The Server receives the packet, unpacks it, and applies the values. 
 		/// ------------------------------------------------------------------------------------------------------
-		private static void OnServerRcv(byte[] bitstream)
+		private static void OnMessage(byte[] bitstream)
 		{
 			var player = ReceiveUpdate(bitstream);
+
+			if (!AsServer)
+				return;
 
 			if (!player || player.IsMine)
 				return;
@@ -155,7 +156,6 @@ namespace emotitron.Compression.Sample
 			ReceiveUpdate(bitstream);
 		}
 
-
 		private void SendUpdate()
 		{
 			int writepos = 0;
@@ -163,9 +163,9 @@ namespace emotitron.Compression.Sample
 
 			/// Serialize and send out this bitstream.
 			if (UsingPUN)
-				NetMsgSends.Send(bitstream, writepos, SERVER_SND_ID, ReceiveGroup.Others);
+				NetMsgSends.Send(bitstream, writepos, SND_ID, ReceiveGroup.Others);
 			else
-				NetMsgSends.Send(bitstream, writepos, AsServer ? SERVER_SND_ID : CLIENT_SND_ID, AsServer ? ReceiveGroup.Others : ReceiveGroup.Master);
+				NetMsgSends.Send(bitstream, writepos, SND_ID, ReceiveGroup.Others);
 		}
 
 		/// <summary>
@@ -247,14 +247,6 @@ namespace emotitron.Compression.Sample
 		#region Net Library Abstractions
 
 
-
-		//public class AddDefineSymbols : Editor
-		//{
-
-
-
-		//}
-
 		private bool IsMine
 		{
 			get
@@ -273,8 +265,8 @@ namespace emotitron.Compression.Sample
 			{
 #if PUN_2_OR_NEWER
 				return (photonView) ? (int)photonView.ViewID : 0;
-//#elif MIRROR
-//				return (int)netId;
+#elif MIRROR
+				return (int)netId;
 #else
 				return (int)netId.Value;
 #endif
@@ -293,7 +285,7 @@ namespace emotitron.Compression.Sample
 			}
 		}
 
-		private bool AsServer
+		private static bool AsServer
 		{
 			get
 			{
@@ -305,31 +297,31 @@ namespace emotitron.Compression.Sample
 			}
 		}
 
-#endregion
+		#endregion
 	}
 
 
-//#if UNITY_EDITOR
+	//#if UNITY_EDITOR
 
-//	[CustomEditor(typeof(Example_2D))]
-//	[CanEditMultipleObjects]
-//	public class Example_2DEditor : Editor
-//	{
-//		SerializedProperty sp;
+	//	[CustomEditor(typeof(Example_2D))]
+	//	[CanEditMultipleObjects]
+	//	public class Example_2DEditor : Editor
+	//	{
+	//		SerializedProperty sp;
 
-		
 
-//		//public void OnEnable()
-//		//{
 
-//		//}
-//		//public override void OnInspectorGUI()
-//		//{
+	//		//public void OnEnable()
+	//		//{
 
-//		//}
-//	}
+	//		//}
+	//		//public override void OnInspectorGUI()
+	//		//{
 
-//#endif
+	//		//}
+	//	}
+
+	//#endif
 
 }
 #pragma warning restore CS0618 // UNET is obsolete

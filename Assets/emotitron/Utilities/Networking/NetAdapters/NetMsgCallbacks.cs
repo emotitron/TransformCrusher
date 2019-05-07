@@ -7,10 +7,9 @@ using emotitron.Compression;
 
 #if PUN_2_OR_NEWER
 using Photon.Pun;
+using Photon.Realtime;
 using ExitGames.Client.Photon;
-#endif
-
-#if MIRROR
+#elif MIRROR
 using Mirror;
 #else
 using UnityEngine.Networking;
@@ -25,12 +24,13 @@ using UnityEngine.Networking;
 namespace emotitron.Utilities.Networking
 {
 
-#if !PUN2_OR_NEWER
+#if !PUN_2_OR_NEWER
 	/// <summary>
 	///  Nonalloc message for Mirror, since we can't directly send writers with Mirror. Set the buffer and length values prior to sending/rcving.
 	/// </summary>
 	public class BytesMessageNonalloc : MessageBase
 	{
+		public static byte[] incomingbuffer = NetMsgSends.reusableByteArray;
 		public byte[] buffer = NetMsgSends.reusableByteArray;
 		public ushort length;
 
@@ -58,15 +58,14 @@ namespace emotitron.Utilities.Networking
 		{
 			length = reader.ReadUInt16();
 			for (int i = 0; i < length; i++)
-				buffer[i] = reader.ReadByte();
+				incomingbuffer[i] = reader.ReadByte();
 		}
 	}
+
 #endif
 
 	public static class NetMsgCallbacks
 	{
-		private static readonly byte[] reusablebuffer = new byte[4096];
-
 		public delegate void ByteBufferCallback(byte[] buffer);
 
 		private static Dictionary<int, CallbackLists> callbacks = new Dictionary<int, CallbackLists>();
@@ -78,6 +77,8 @@ namespace emotitron.Utilities.Networking
 
 
 #if PUN_2_OR_NEWER
+
+		#region PUN2
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 		private static void RegisterOnEventListener()
@@ -96,13 +97,13 @@ namespace emotitron.Utilities.Networking
 				return;
 
 			// ignore messages from self.
-			if (PhotonNetwork.IsMasterClient && PhotonNetwork.MasterClient.ActorNumber == photonEvent.Sender)
+			if (PhotonNetwork.IsMasterClient && PhotonNetwork.MasterClient.ActorNumber == photonEvent.Sender())
 			{
 				Debug.Log("Master Client talking to self? Normal occurance for a few seconds after Master leaves the game and a new master is selected.");
 				return;
 			}
 
-			byte[] buffer = (photonEvent.CustomData as byte[]);
+			byte[] buffer = (photonEvent.CustomData() as byte[]);
 
 			var cbs = callbacks[msgId];
 			if (cbs.bufferCallbacks != null && cbs.bufferCallbacks.Count > 0)
@@ -169,8 +170,9 @@ namespace emotitron.Utilities.Networking
 			}
 		}
 
-		#endregion
+		#endregion  // END HANDLERS
 
+		#endregion  // END PUN2
 #else
 
 
@@ -179,10 +181,11 @@ namespace emotitron.Utilities.Networking
 			/// Make sure network is active, or registering handlers will fail, or they will just be forgotten
 			if (NetworkServer.active)
 			{
-				NetworkServer.RegisterHandler(msgId, OnMessage);
 #if MIRROR
-				NetworkClient.UnregisterHandler(msgId);
+				NetworkClient.UnregisterHandler<BytesMessageNonalloc>();
+				NetworkServer.RegisterHandler<BytesMessageNonalloc>(OnMessage);
 #else
+				NetworkServer.RegisterHandler(msgId, OnMessage);
 				if (!ReferenceEquals(NetworkManager.singleton.client, null))
 					NetworkManager.singleton.client.UnregisterHandler(msgId);
 #endif
@@ -190,11 +193,12 @@ namespace emotitron.Utilities.Networking
 			else if (NetworkClient.active)
 			{
 #if MIRROR
-				NetworkClient.RegisterHandler(msgId, OnMessage);
+				NetworkServer.UnregisterHandler<BytesMessageNonalloc>();
+				NetworkClient.RegisterHandler<BytesMessageNonalloc>(OnMessage);
 #else
+				NetworkServer.UnregisterHandler(msgId);
 				NetworkManager.singleton.client.RegisterHandler(msgId, OnMessage);
 #endif
-				NetworkServer.UnregisterHandler(msgId);
 			}
 			else
 				return false;
@@ -212,7 +216,11 @@ namespace emotitron.Utilities.Networking
 			if (asServer)
 			{
 				if (NetworkServer.active)
+#if MIRROR
+					NetworkServer.RegisterHandler<BytesMessageNonalloc>(OnMessage);
+#else
 					NetworkServer.RegisterHandler(msgId, OnMessage);
+#endif
 				else
 					return false;
 			}
@@ -220,7 +228,7 @@ namespace emotitron.Utilities.Networking
 			{
 				if (NetworkClient.active)
 #if MIRROR
-					NetworkClient.RegisterHandler(msgId, OnMessage);
+					NetworkClient.RegisterHandler<BytesMessageNonalloc>(OnMessage);
 #else
 					NetworkManager.singleton.client.RegisterHandler(msgId, OnMessage);
 #endif
@@ -235,8 +243,14 @@ namespace emotitron.Utilities.Networking
 			return true;
 		}
 
+
 		public static void RegisterHandler(short msgId, ByteBufferCallback callback)
 		{
+
+#if MIRROR
+			msgId = 0;
+#endif
+
 			if (callback == null)
 				return;
 
@@ -259,6 +273,10 @@ namespace emotitron.Utilities.Networking
 		{
 			if (callback == null)
 				return;
+
+#if MIRROR
+			msgId = 0;
+#endif
 
 			if (!RegisterMessageId(msgId, asServer))
 				return;
@@ -283,7 +301,7 @@ namespace emotitron.Utilities.Networking
 #if MIRROR
 				NetworkClient.UnregisterHandler((short)msgId);
 #else
-				if (NetworkManager.singleton.client != null)
+						if (NetworkManager.singleton.client != null)
 				NetworkManager.singleton.client.UnregisterHandler((short)msgId);
 #endif
 		}
@@ -304,6 +322,10 @@ namespace emotitron.Utilities.Networking
 
 		public static void UnregisterHandler(short msgId, ByteBufferCallback callback)
 		{
+#if MIRROR
+			msgId = 0;
+#endif
+
 			if (!callbacks.ContainsKey(msgId) || callbacks[msgId].bufferCallbacks == null)
 				return;
 
@@ -343,10 +365,31 @@ namespace emotitron.Utilities.Networking
 		/// All of our registered UNET msgId msgs get routed this method, which reads them into a byte[] form before passing them to the callbacks
 		/// </summary>
 		/// <param name="msg"></param>
+#if MIRROR
+		public static void OnMessage(NetworkConnection conn, BytesMessageNonalloc bmsg)
+		{
+			if (!callbacks.ContainsKey(0))
+				return;
+
+			var cbs = callbacks[0];
+
+
+			/// Send to all byte[] buffer callbacks
+			var bufferCBList = cbs.bufferCallbacks;
+
+			if (bufferCBList != null)
+			{
+				var buffer = BytesMessageNonalloc.incomingbuffer;
+
+				int cnt = bufferCBList.Count;
+				for (int i = 0; i < cnt; ++i)
+					bufferCBList[i](buffer);
+			}
+		}
+#else
 		public static void OnMessage(NetworkMessage msg)
 		{
 			var bmsg = NetMsgSends.bytesmsg;
-			bmsg.buffer = reusablebuffer;
 
 			bmsg.Deserialize(msg.reader);
 
@@ -357,7 +400,6 @@ namespace emotitron.Utilities.Networking
 
 			var cbs = callbacks[msgId];
 
-
 			/// Send to all byte[] buffer callbacks
 			var bufferCBList = cbs.bufferCallbacks;
 
@@ -365,11 +407,14 @@ namespace emotitron.Utilities.Networking
 			{
 				int cnt = bufferCBList.Count;
 				for (int i = 0; i < cnt; ++i)
-					bufferCBList[i](reusablebuffer);
+					bufferCBList[i](BytesMessageNonalloc.incomingbuffer);
 			}
 		}
 #endif
 
 	}
+
+#endif
+
 }
 #pragma warning restore CS0618 // UNET obsolete

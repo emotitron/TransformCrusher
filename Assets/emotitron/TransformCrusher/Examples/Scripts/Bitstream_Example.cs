@@ -33,8 +33,7 @@ namespace emotitron.Compression.Sample
 		/// The lookup table for finding which net object incoming updates belong to.
 		public static Dictionary<int, Bitstream_Example> players = new Dictionary<int, Bitstream_Example>();
 
-		public const byte CLIENT_SND_ID = 222;
-		public const byte SERVER_SND_ID = 223;
+		public const byte SND_ID = 223;
 
 		/// Reference to the crusher we are using for the IHasTransformCrusher interface.
 		/// This is used by the BasicController to get the bounds of our crusher to clamp movement.
@@ -89,14 +88,13 @@ namespace emotitron.Compression.Sample
 				flasher = transform.Find("Flasher").gameObject;
 
 			/// Register our methods as Unet Msg Receivers
-			NetMsgCallbacks.RegisterHandler(CLIENT_SND_ID, OnServerRcv);
-			NetMsgCallbacks.RegisterHandler(SERVER_SND_ID, OnClientRcv);
+			NetMsgCallbacks.RegisterHandler(SND_ID, OnRcv);
 		}
 
-//#if !PUN_2_OR_NEWER
-//		public override void OnStartServer() { NetMsgCallbacks.RegisterHandler(CLIENT_SND_ID, OnServerRcv, true); }
-//		public override void OnStartClient() { NetMsgCallbacks.RegisterHandler(SERVER_SND_ID, OnClientRcv, false); }
-//#endif
+#if !PUN_2_OR_NEWER
+		public override void OnStartServer() { NetMsgCallbacks.RegisterHandler(SND_ID, OnRcv); }
+		public override void OnStartClient() { NetMsgCallbacks.RegisterHandler(SND_ID, OnRcv); }
+#endif
 
 		private void Start()
 		{
@@ -115,8 +113,8 @@ namespace emotitron.Compression.Sample
 			if (players.ContainsKey(NetId))
 				players.Remove(NetId);
 			
-			NetMsgCallbacks.UnregisterHandler(CLIENT_SND_ID, OnServerRcv);
-			NetMsgCallbacks.UnregisterHandler(SERVER_SND_ID, OnClientRcv);
+			//NetMsgCallbacks.UnregisterHandler(CLIENT_SND_ID, OnServerRcv);
+			NetMsgCallbacks.UnregisterHandler(SND_ID, OnRcv);
 		}
 
 		/// ------------------------------------------------------------------------------------------------------
@@ -155,12 +153,15 @@ namespace emotitron.Compression.Sample
 		}
 
 		/// ------------------------------------------------------------------------------------------------------
-		/// 3. The Server receives the packet, unpacks it, and applies the values. 
+		/// 3. The Server/client receives the packet, unpacks it, and applies the values. 
 		/// ------------------------------------------------------------------------------------------------------
-		private static void OnServerRcv(byte[] bitstream)
+		private static void OnRcv(byte[] bitstream)
 		{
 			//Debug.Log("Svr Rcv");
 			var player = ReceiveUpdate(bitstream);
+
+			if (!AsServer)
+				return;
 
 			if (!player || player.IsMine)
 				return;
@@ -168,26 +169,14 @@ namespace emotitron.Compression.Sample
 			/// This instance of Bitstream_Example on the server sends its update to all clients.
 			player.SendUpdate();
 		}
-
-		/// ------------------------------------------------------------------------------------------------------
-		/// 4. Clients receive the packet from the server, unpack it, and apply the values. 
-		/// ------------------------------------------------------------------------------------------------------
-		private static void OnClientRcv(byte[] bitstream)
-		{
-			//Debug.Log("Clnt Rcv");
-			ReceiveUpdate(bitstream);
-		}
-
+		
 		private void SendUpdate()
 		{
 			int writepos = 0;
 			SerializeValuesToBitstream(buffer, ref writepos);
 
 			/// Serialize and send out this bitstream.
-			if (UsingPUN)
-				NetMsgSends.Send(buffer, writepos, SERVER_SND_ID, ReceiveGroup.Others);
-			else
-				NetMsgSends.Send(buffer, writepos, AsServer ? SERVER_SND_ID : CLIENT_SND_ID, AsServer ? ReceiveGroup.Others : ReceiveGroup.Master);
+			NetMsgSends.Send(buffer, writepos, SND_ID, ReceiveGroup.Others);
 		}
 
 		/// <summary>
@@ -345,7 +334,7 @@ namespace emotitron.Compression.Sample
 			}
 		}
 
-		private bool AsServer
+		private static bool AsServer
 		{
 			get
 			{

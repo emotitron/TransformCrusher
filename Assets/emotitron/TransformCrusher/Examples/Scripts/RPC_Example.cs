@@ -5,8 +5,8 @@ using emotitron.Compression;
 
 #if PUN_2_OR_NEWER
 using Photon.Pun;
-//#elif MIRROR
-//using Mirror;
+#elif MIRROR
+using Mirror;
 #else
 using UnityEngine.Networking;
 #endif
@@ -27,9 +27,6 @@ namespace emotitron.Compression.Sample
 #endif
 		 IHasTransformCrusher
 	{
-		public const byte CLIENT_SND_ID = 222;
-		public const byte SERVER_SND_ID = 223;
-		
 		// None of this initialization stuff is needed. Simply declaring a public crusher is all you need to do.
 		// These particular settings are just so this example comes up with the sizes described.
 		public SharedTransformCrusher sharedCrusher = new SharedTransformCrusher(ShareByCommon.ComponentAndFieldName)
@@ -179,10 +176,6 @@ namespace emotitron.Compression.Sample
 			//sharedCrusher.Crusher.Apply(transform, frag0, frag1);
 		}
 
-
-
-
-
 		#region Net Library Abstractions
 
 		private bool IsMine
@@ -203,8 +196,8 @@ namespace emotitron.Compression.Sample
 			{
 #if PUN_2_OR_NEWER
 				return (photonView) ? (int)photonView.ViewID : 0;
-//#elif MIRROR
-//				return (int)netId;
+#elif MIRROR
+				return (int)netId;
 #else
 				return (int)netId.Value;
 #endif
@@ -223,7 +216,7 @@ namespace emotitron.Compression.Sample
 			}
 		}
 
-		private bool AsServer
+		private static bool AsServer
 		{
 			get
 			{
