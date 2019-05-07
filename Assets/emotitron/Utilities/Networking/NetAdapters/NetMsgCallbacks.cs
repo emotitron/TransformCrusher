@@ -173,7 +173,8 @@ namespace emotitron.Utilities.Networking
 		#endregion  // END HANDLERS
 
 		#endregion  // END PUN2
-#else
+
+#else  // UNET AND MIRROR
 
 
 		private static bool RegisterMessageId(short msgId)
@@ -412,9 +413,9 @@ namespace emotitron.Utilities.Networking
 		}
 #endif
 
-	}
+#endif // END MIRROR.UNET
 
-#endif
+	}
 
 }
 #pragma warning restore CS0618 // UNET obsolete
