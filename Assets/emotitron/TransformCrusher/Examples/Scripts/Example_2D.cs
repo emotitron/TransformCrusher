@@ -134,7 +134,7 @@ namespace emotitron.Compression.Sample
 		/// ------------------------------------------------------------------------------------------------------
 		/// 3. The Server receives the packet, unpacks it, and applies the values. 
 		/// ------------------------------------------------------------------------------------------------------
-		private static void OnMessage(byte[] bitstream)
+		private static void OnMessage(object conn, int connId, byte[] bitstream)
 		{
 			var player = ReceiveUpdate(bitstream);
 

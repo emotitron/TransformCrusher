@@ -155,7 +155,7 @@ namespace emotitron.Compression.Sample
 		/// ------------------------------------------------------------------------------------------------------
 		/// 3. The Server/client receives the packet, unpacks it, and applies the values. 
 		/// ------------------------------------------------------------------------------------------------------
-		private static void OnRcv(byte[] bitstream)
+		private static void OnRcv(object conn, int connId, byte[] bitstream)
 		{
 			//Debug.Log("Svr Rcv");
 			var player = ReceiveUpdate(bitstream);

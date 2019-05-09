@@ -66,7 +66,7 @@ namespace emotitron.Utilities.Networking
 
 	public static class NetMsgCallbacks
 	{
-		public delegate void ByteBufferCallback(byte[] buffer);
+		public delegate void ByteBufferCallback(object conn, int connId, byte[] buffer);
 
 		private static Dictionary<int, CallbackLists> callbacks = new Dictionary<int, CallbackLists>();
 
@@ -97,21 +97,20 @@ namespace emotitron.Utilities.Networking
 				return;
 
 			// ignore messages from self.
-			if (PhotonNetwork.IsMasterClient && PhotonNetwork.MasterClient.ActorNumber == photonEvent.Sender())
+			if (PhotonNetwork.IsMasterClient && PhotonNetwork.MasterClient.ActorNumber == photonEvent.Sender)
 			{
 				Debug.Log("Master Client talking to self? Normal occurance for a few seconds after Master leaves the game and a new master is selected.");
 				return;
 			}
 
-			byte[] buffer = (photonEvent.CustomData() as byte[]);
+			byte[] buffer = (photonEvent.CustomData as byte[]);
 
 			var cbs = callbacks[msgId];
 			if (cbs.bufferCallbacks != null && cbs.bufferCallbacks.Count > 0)
 			{
 				foreach (var cb in cbs.bufferCallbacks)
-					cb(buffer);
+					cb(null, photonEvent.Sender, buffer);
 			}
-
 		}
 
 		#region Handler Registration
@@ -384,7 +383,7 @@ namespace emotitron.Utilities.Networking
 
 				int cnt = bufferCBList.Count;
 				for (int i = 0; i < cnt; ++i)
-					bufferCBList[i](buffer);
+					bufferCBList[i](conn, conn.connectionId, buffer);
 			}
 		}
 #else
@@ -408,7 +407,7 @@ namespace emotitron.Utilities.Networking
 			{
 				int cnt = bufferCBList.Count;
 				for (int i = 0; i < cnt; ++i)
-					bufferCBList[i](BytesMessageNonalloc.incomingbuffer);
+					bufferCBList[i](msg.conn, msg.conn.connectionId, BytesMessageNonalloc.incomingbuffer);
 			}
 		}
 #endif
