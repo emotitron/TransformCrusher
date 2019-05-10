@@ -7,7 +7,7 @@ using emotitron.Compression;
 using Photon.Pun;
 #elif MIRROR
 using Mirror;
-#else
+#elif !UNITY_2019_1_OR_NEWER
 using UnityEngine.Networking;
 #endif
 
@@ -15,6 +15,10 @@ using UnityEngine.Networking;
 
 namespace emotitron.Compression.Sample
 {
+#if UNITY_2019_1_OR_NEWER && !PUN_2_OR_NEWER && !MIRROR
+	public class RPC_Example : MonoBehaviour { }
+#else
+
 	/// <summary>
 	/// A VERY basic compressed sync example using UNET. Expect jitter - since we are not doing any kind of buffering or interpolation.
 	/// This is an example of extracting fragments from a CompressedTransform for use as RPC and Command arguments.
@@ -231,6 +235,7 @@ namespace emotitron.Compression.Sample
 		#endregion
 	}
 
+#endif // END Netlib exist check
 }
 #pragma warning restore CS0618 // UNET is obsolete - we know.
 

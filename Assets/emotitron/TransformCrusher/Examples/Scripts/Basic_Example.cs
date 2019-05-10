@@ -6,11 +6,15 @@ using UnityEngine.Networking;
 
 namespace emotitron.Compression.Sample
 {
+#if UNITY_2019_1_OR_NEWER
+	public class Basic_Example : UnityEngine.MonoBehaviour { }
+#else
 
 	/// <summary>
 	/// A VERY basic compressed sync example using UNET. Expect jitter - since we are not doing any kind of buffering or interpolation.
 	/// This is an example of extracting fragments from a CompressedMatrix for use as RPC and Command arguments.
 	/// </summary>
+
 	public class Basic_Example : NetworkBehaviour
 	{
 		// None of this initialization stuff is needed. Simply declaring a public crusher is all you need to do.
@@ -37,7 +41,7 @@ namespace emotitron.Compression.Sample
 		{
 			if (!hasAuthority)
 				return;
-			
+
 			// We compress the transform, which returns a CompressedMatrix.
 			var cm = crusher.Compress(transform);
 
@@ -99,6 +103,7 @@ namespace emotitron.Compression.Sample
 			crusher.Apply(transform, frag0, frag1);
 		}
 	}
+#endif
 }
 #pragma warning restore CS0618 // UNET is obsolete - we know.
 

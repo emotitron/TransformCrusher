@@ -11,7 +11,7 @@ using UnityEditor;
 using Photon.Pun;
 #elif MIRROR
 using Mirror;
-#else
+#elif !UNITY_2019_1_OR_NEWER
 using UnityEngine.Networking;
 #endif
 
@@ -31,7 +31,7 @@ namespace emotitron.Utilities.Networking
 		void OnEnable()
 		{
 			spawns.Add(this);
-#if !PUN_2_OR_NEWER
+#if MIRROR || !UNITY_2019_1_OR_NEWER
 			NetworkManager.RegisterStartPosition(transform);
 #endif
 		}
@@ -39,7 +39,7 @@ namespace emotitron.Utilities.Networking
 		void OnDisable()
 		{
 			spawns.Remove(this);
-#if !PUN_2_OR_NEWER
+#if MIRROR || !UNITY_2019_1_OR_NEWER
 			NetworkManager.UnRegisterStartPosition(transform);
 #endif
 		}
@@ -103,7 +103,7 @@ namespace emotitron.Utilities.Networking
 				return null;
 
 			int spawnId = (value + 1) % spawns.Count;
-			
+
 			return spawns[spawnId].transform;
 		}
 

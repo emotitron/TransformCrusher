@@ -10,7 +10,7 @@ using emotitron.Utilities.Networking;
 using Photon.Pun;
 #elif MIRROR
 using Mirror;
-#else
+#elif !UNITY_2019_1_OR_NEWER
 using UnityEngine.Networking;
 #endif
 
@@ -18,6 +18,10 @@ using UnityEngine.Networking;
 
 namespace emotitron.Compression.Sample
 {
+#if UNITY_2019_1_OR_NEWER && !PUN_2_OR_NEWER && !MIRROR
+	public class Example_2D : MonoBehaviour { }
+#else
+
 	/// <summary>
 	/// A VERY basic compressed sync example using UNET. There is no interpolation, buffering or extrapoltion in this example - 
 	/// this is NOT an example of good networking. This is only to demonstrate the usage of the crushers.
@@ -78,14 +82,14 @@ namespace emotitron.Compression.Sample
 		}
 
 #if !PUN_2_OR_NEWER
-		public override void OnStartServer() { NetMsgCallbacks.RegisterHandler(SND_ID, OnMessage); }
-		public override void OnStartClient() { NetMsgCallbacks.RegisterHandler(SND_ID, OnMessage); }
+		public override void OnStartServer() { NetMsgCallbacks.RegisterCallback(SND_ID, OnMessage); }
+		public override void OnStartClient() { NetMsgCallbacks.RegisterCallback(SND_ID, OnMessage); }
 #endif
 
 		private void Start()
 		{
 			/// Register our methods as Unet Msg Receivers
-			NetMsgCallbacks.RegisterHandler(SND_ID, OnMessage);
+			NetMsgCallbacks.RegisterCallback(SND_ID, OnMessage);
 
 			/// Add this component to the dictionary of netobjects. Netid is used as the key.
 #if PUN_2_OR_NEWER
@@ -301,27 +305,7 @@ namespace emotitron.Compression.Sample
 	}
 
 
-	//#if UNITY_EDITOR
 
-	//	[CustomEditor(typeof(Example_2D))]
-	//	[CanEditMultipleObjects]
-	//	public class Example_2DEditor : Editor
-	//	{
-	//		SerializedProperty sp;
-
-
-
-	//		//public void OnEnable()
-	//		//{
-
-	//		//}
-	//		//public override void OnInspectorGUI()
-	//		//{
-
-	//		//}
-	//	}
-
-	//#endif
-
+#endif // End Netlib exist check
 }
 #pragma warning restore CS0618 // UNET is obsolete

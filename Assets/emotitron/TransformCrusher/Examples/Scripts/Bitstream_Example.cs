@@ -8,9 +8,9 @@ using emotitron.Utilities.Networking;
 
 #if PUN_2_OR_NEWER
 using Photon.Pun;
-//#elif MIRROR
-//using Mirror;
-#else
+#elif MIRROR
+using Mirror;
+#elif !UNITY_2019_1_OR_NEWER
 using UnityEngine.Networking;
 #endif
 
@@ -18,6 +18,11 @@ using UnityEngine.Networking;
 
 namespace emotitron.Compression.Sample
 {
+
+#if UNITY_2019_1_OR_NEWER && !PUN_2_OR_NEWER && !MIRROR
+	public class Bitstream_Example : MonoBehaviour { }
+#else
+
 	/// <summary>
 	/// A VERY basic compressed sync example using UNET. There is no interpolation, buffering or extrapoltion in this example - 
 	/// this is NOT an example of good networking. This is only to demonstrate the usage of the crushers.
@@ -88,17 +93,17 @@ namespace emotitron.Compression.Sample
 				flasher = transform.Find("Flasher").gameObject;
 
 			/// Register our methods as Unet Msg Receivers
-			NetMsgCallbacks.RegisterHandler(SND_ID, OnRcv);
+			NetMsgCallbacks.RegisterCallback(SND_ID, OnRcv);
 		}
 
-#if !PUN_2_OR_NEWER
-		public override void OnStartServer() { NetMsgCallbacks.RegisterHandler(SND_ID, OnRcv); }
-		public override void OnStartClient() { NetMsgCallbacks.RegisterHandler(SND_ID, OnRcv); }
+#if !PUN_2_OR_NEWER && !UNITY_2019_1_OR_NEWER
+		public override void OnStartServer() { NetMsgCallbacks.RegisterCallback(SND_ID, OnRcv); }
+		public override void OnStartClient() { NetMsgCallbacks.RegisterCallback(SND_ID, OnRcv); }
 #endif
 
 		private void Start()
 		{
-			
+
 
 			/// Add this component to the dictionary of netobjects. Netid is used as the key.
 #if PUN_2_OR_NEWER
@@ -112,7 +117,7 @@ namespace emotitron.Compression.Sample
 		{
 			if (players.ContainsKey(NetId))
 				players.Remove(NetId);
-			
+
 			//NetMsgCallbacks.UnregisterHandler(CLIENT_SND_ID, OnServerRcv);
 			NetMsgCallbacks.UnregisterHandler(SND_ID, OnRcv);
 		}
@@ -169,7 +174,7 @@ namespace emotitron.Compression.Sample
 			/// This instance of Bitstream_Example on the server sends its update to all clients.
 			player.SendUpdate();
 		}
-		
+
 		private void SendUpdate()
 		{
 			int writepos = 0;
@@ -314,8 +319,8 @@ namespace emotitron.Compression.Sample
 			{
 #if PUN_2_OR_NEWER
 				return (photonView) ? (int)photonView.ViewID : 0;
-//#elif MIRROR
-//				return (int)netId;
+#elif MIRROR
+				return (int)netId;
 #else
 				return (int)netId.Value;
 #endif
@@ -349,5 +354,6 @@ namespace emotitron.Compression.Sample
 		#endregion
 	}
 
+#endif // NETLIB exist check
 }
 #pragma warning restore CS0618 // UNET is obsolete
