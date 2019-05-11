@@ -106,7 +106,7 @@ namespace emotitron.Compression.Sample
 
 			if (UsingPUN)
 			{
-				NetMsgCallbacks.UnregisterHandler(SND_ID, OnMessage);
+				NetMsgCallbacks.UnregisterCallback(SND_ID, OnMessage);
 			}
 		}
 

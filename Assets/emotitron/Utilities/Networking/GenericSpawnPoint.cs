@@ -31,16 +31,20 @@ namespace emotitron.Utilities.Networking
 		void OnEnable()
 		{
 			spawns.Add(this);
+#if !PUN_2_OR_NEWER
 #if MIRROR || !UNITY_2019_1_OR_NEWER
 			NetworkManager.RegisterStartPosition(transform);
+#endif
 #endif
 		}
 
 		void OnDisable()
 		{
 			spawns.Remove(this);
+#if !PUN_2_OR_NEWER
 #if MIRROR || !UNITY_2019_1_OR_NEWER
 			NetworkManager.UnRegisterStartPosition(transform);
+#endif
 #endif
 		}
 

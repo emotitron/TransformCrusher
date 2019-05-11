@@ -24,7 +24,9 @@ using UnityEngine.Networking;
 namespace emotitron.Utilities.Networking
 {
 
-#if !PUN_2_OR_NEWER && !UNITY_2019_1_OR_NEWER
+#if !PUN_2_OR_NEWER
+#if !UNITY_2019_1_OR_NEWER || MIRROR
+
 	/// <summary>
 	///  Nonalloc message for Mirror, since we can't directly send writers with Mirror. Set the buffer and length values prior to sending/rcving.
 	/// </summary>
@@ -38,19 +40,19 @@ namespace emotitron.Utilities.Networking
 
 		public override void Serialize(NetworkWriter writer)
 		{
-			for (int i = 0; i < length; i++)
-				writer.Write(buffer[i]);
+			writer.Write(buffer, 0, length);
 		}
 
 		public override void Deserialize(NetworkReader reader)
 		{
 			length = (ushort)(reader.Length - reader.Position);
+			reader.ReadBytes(length);
 			for (int i = 0; i < length; i++)
 				incomingbuffer[i] = reader.ReadByte();
 		}
 	}
 
-
+#endif
 #endif
 
 	public static class NetMsgCallbacks
@@ -105,7 +107,7 @@ namespace emotitron.Utilities.Networking
 		#region Handler Registration
 
 		[System.Obsolete("Removed the asServer from UNET side, killing it here as well.")]
-		public static void RegisterHandler(byte msgid, ByteBufferCallback callback, bool asServer)
+		public static void RegisterCallback(byte msgid, ByteBufferCallback callback, bool asServer)
 		{
 			if (!callbacks.ContainsKey(msgid))
 				callbacks.Add(msgid, new CallbackLists());
@@ -119,7 +121,7 @@ namespace emotitron.Utilities.Networking
 				cbs.Add(callback);
 		}
 
-		public static void RegisterHandler(byte msgid, ByteBufferCallback callback)
+		public static void RegisterCallback(byte msgid, ByteBufferCallback callback)
 		{
 			if (!callbacks.ContainsKey(msgid))
 				callbacks.Add(msgid, new CallbackLists());
@@ -134,7 +136,7 @@ namespace emotitron.Utilities.Networking
 		}
 
 		[System.Obsolete("Removed the asServer from UNET side, killing it here as well.")]
-		public static void UnregisterHandler(byte msgid, ByteBufferCallback callback, bool asServer)
+		public static void UnregisterCallback(byte msgid, ByteBufferCallback callback, bool asServer)
 		{
 			if (callbacks.ContainsKey(msgid))
 			{
@@ -146,7 +148,7 @@ namespace emotitron.Utilities.Networking
 			}
 		}
 
-		public static void UnregisterHandler(byte msgid, ByteBufferCallback callback)
+		public static void UnregisterCallback(byte msgid, ByteBufferCallback callback)
 		{
 			if (callbacks.ContainsKey(msgid))
 			{
@@ -316,7 +318,7 @@ namespace emotitron.Utilities.Networking
 		}
 
 
-		public static void UnregisterHandler(short msgId, ByteBufferCallback callback)
+		public static void UnregisterCallback(short msgId, ByteBufferCallback callback)
 		{
 #if MIRROR
 			msgId = 0;
@@ -339,7 +341,7 @@ namespace emotitron.Utilities.Networking
 		}
 
 		[System.Obsolete("Moving to make the asServer handling not needed, to make send more generic.")]
-		public static void UnregisterHandler(short msgId, ByteBufferCallback callback, bool asServer)
+		public static void UnregisterCallback(short msgId, ByteBufferCallback callback, bool asServer)
 		{
 			if (!callbacks.ContainsKey(msgId) || callbacks[msgId].bufferCallbacks == null)
 				return;

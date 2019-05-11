@@ -119,7 +119,7 @@ namespace emotitron.Compression.Sample
 				players.Remove(NetId);
 
 			//NetMsgCallbacks.UnregisterHandler(CLIENT_SND_ID, OnServerRcv);
-			NetMsgCallbacks.UnregisterHandler(SND_ID, OnRcv);
+			NetMsgCallbacks.UnregisterCallback(SND_ID, OnRcv);
 		}
 
 		/// ------------------------------------------------------------------------------------------------------
