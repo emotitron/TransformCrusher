@@ -37,8 +37,6 @@ namespace emotitron.Compression.Sample
 		/// The lookup table for finding which net object incoming updates belong to.
 		public static Dictionary<int, Example_2D> players = new Dictionary<int, Example_2D>();
 
-		public const byte SND_ID = 223;
-
 		/// Reference to the crusher we are using for the IHasTransformCrusher interface.
 		/// This is used by the BasicController to get the bounds of our crusher to clamp movement.
 		public TransformCrusher TC { get { return sharedCrusher; } }
@@ -82,14 +80,14 @@ namespace emotitron.Compression.Sample
 		}
 
 #if !PUN_2_OR_NEWER
-		public override void OnStartServer() { NetMsgCallbacks.RegisterCallback(SND_ID, OnMessage); }
-		public override void OnStartClient() { NetMsgCallbacks.RegisterCallback(SND_ID, OnMessage); }
+		public override void OnStartServer() { NetMsgCallbacks.RegisterDefaultHandler(); }
+		public override void OnStartClient() { NetMsgCallbacks.RegisterDefaultHandler(); }
 #endif
 
 		private void Start()
 		{
 			/// Register our methods as Unet Msg Receivers
-			NetMsgCallbacks.RegisterCallback(SND_ID, OnMessage);
+			NetMsgCallbacks.RegisterCallback(OnMessage);
 
 			/// Add this component to the dictionary of netobjects. Netid is used as the key.
 #if PUN_2_OR_NEWER
@@ -106,7 +104,7 @@ namespace emotitron.Compression.Sample
 
 			if (UsingPUN)
 			{
-				NetMsgCallbacks.UnregisterCallback(SND_ID, OnMessage);
+				NetMsgCallbacks.UnregisterCallback(OnMessage);
 			}
 		}
 
@@ -167,9 +165,9 @@ namespace emotitron.Compression.Sample
 
 			/// Serialize and send out this bitstream.
 			if (UsingPUN)
-				NetMsgSends.Send(bitstream, writepos, SND_ID, ReceiveGroup.Others);
+				NetMsgSends.Send(bitstream, writepos, gameObject, ReceiveGroup.Others);
 			else
-				NetMsgSends.Send(bitstream, writepos, SND_ID, ReceiveGroup.Others);
+				NetMsgSends.Send(bitstream, writepos, gameObject, ReceiveGroup.Others);
 		}
 
 		/// <summary>

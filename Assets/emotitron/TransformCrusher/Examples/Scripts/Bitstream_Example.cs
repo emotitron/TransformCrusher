@@ -38,8 +38,6 @@ namespace emotitron.Compression.Sample
 		/// The lookup table for finding which net object incoming updates belong to.
 		public static Dictionary<int, Bitstream_Example> players = new Dictionary<int, Bitstream_Example>();
 
-		public const byte SND_ID = 223;
-
 		/// Reference to the crusher we are using for the IHasTransformCrusher interface.
 		/// This is used by the BasicController to get the bounds of our crusher to clamp movement.
 		public TransformCrusher TC { get { return sharedCrusher; } }
@@ -93,12 +91,12 @@ namespace emotitron.Compression.Sample
 				flasher = transform.Find("Flasher").gameObject;
 
 			/// Register our methods as Unet Msg Receivers
-			NetMsgCallbacks.RegisterCallback(SND_ID, OnRcv);
+			NetMsgCallbacks.RegisterCallback(OnRcv);
 		}
 
 #if !PUN_2_OR_NEWER && !UNITY_2019_1_OR_NEWER
-		public override void OnStartServer() { NetMsgCallbacks.RegisterCallback(SND_ID, OnRcv); }
-		public override void OnStartClient() { NetMsgCallbacks.RegisterCallback(SND_ID, OnRcv); }
+		public override void OnStartServer() { NetMsgCallbacks.RegisterDefaultHandler(); }
+		public override void OnStartClient() { NetMsgCallbacks.RegisterDefaultHandler(); }
 #endif
 
 		private void Start()
@@ -119,7 +117,7 @@ namespace emotitron.Compression.Sample
 				players.Remove(NetId);
 
 			//NetMsgCallbacks.UnregisterHandler(CLIENT_SND_ID, OnServerRcv);
-			NetMsgCallbacks.UnregisterCallback(SND_ID, OnRcv);
+			NetMsgCallbacks.UnregisterCallback(OnRcv);
 		}
 
 		/// ------------------------------------------------------------------------------------------------------
@@ -181,7 +179,7 @@ namespace emotitron.Compression.Sample
 			SerializeValuesToBitstream(buffer, ref writepos);
 
 			/// Serialize and send out this bitstream.
-			NetMsgSends.Send(buffer, writepos, SND_ID, ReceiveGroup.Others);
+			NetMsgSends.Send(buffer, writepos, gameObject, ReceiveGroup.Others);
 		}
 
 		/// <summary>
