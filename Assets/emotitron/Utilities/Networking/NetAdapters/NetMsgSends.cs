@@ -46,35 +46,45 @@ namespace emotitron.Utilities.Networking
 
 		private static SendOptions sendOpts = new SendOptions();
 
-		public static void Send(this byte[] buffer, ushort bytecount, byte msgId, ReceiveGroup rcvGrp)
-		{
-			//TODO replace this GC generating mess with something prealloc
-			System.ArraySegment<byte> byteseg = new System.ArraySegment<byte>(buffer, 0, bytecount);
-
-			PhotonNetwork.NetworkingClient.OpRaiseEvent(msgId, byteseg, opts[(int)rcvGrp], sendOpts);
-			PhotonNetwork.NetworkingClient.Service();
-		}
-
-		public static void Send(this byte[] buffer, int bitposition, byte msgId, ReceiveGroup rcvGrp)
+		public static void Send(this byte[] buffer, int bitposition, GameObject refObj, ReceiveGroup rcvGrp)
 		{
 			int bytecount = (bitposition + 7) >> 3;
-
 			//TODO replace this GC generating mess with something prealloc
 			System.ArraySegment<byte> byteseg = new System.ArraySegment<byte>(buffer, 0, bytecount);
 
-			PhotonNetwork.NetworkingClient.OpRaiseEvent(msgId, byteseg, opts[(int)rcvGrp], sendOpts);
+			PhotonNetwork.NetworkingClient.OpRaiseEvent(NetMsgCallbacks.DEF_MSG_ID, byteseg, opts[(int)rcvGrp], sendOpts);
 			PhotonNetwork.NetworkingClient.Service();
 		}
 
-		public static void Send(this byte[] buffer, byte msgId, ReceiveGroup rcvGrp)
-		{
-			//TODO replace this GC generating mess with something prealloc
-			int bytecount = buffer.Length;
-			byte[] streambytes = new byte[bytecount];
-			Array.Copy(buffer, streambytes, bytecount);
-			PhotonNetwork.NetworkingClient.OpRaiseEvent(msgId, streambytes, opts[(int)rcvGrp], sendOpts);
-			PhotonNetwork.NetworkingClient.Service();
-		}
+		//public static void Send(this byte[] buffer, ushort bytecount, byte msgId, ReceiveGroup rcvGrp)
+		//{
+		//	//TODO replace this GC generating mess with something prealloc
+		//	System.ArraySegment<byte> byteseg = new System.ArraySegment<byte>(buffer, 0, bytecount);
+
+		//	PhotonNetwork.NetworkingClient.OpRaiseEvent(msgId, byteseg, opts[(int)rcvGrp], sendOpts);
+		//	PhotonNetwork.NetworkingClient.Service();
+		//}
+
+		//public static void Send(this byte[] buffer, int bitposition, byte msgId, ReceiveGroup rcvGrp)
+		//{
+		//	int bytecount = (bitposition + 7) >> 3;
+
+		//	//TODO replace this GC generating mess with something prealloc
+		//	System.ArraySegment<byte> byteseg = new System.ArraySegment<byte>(buffer, 0, bytecount);
+
+		//	PhotonNetwork.NetworkingClient.OpRaiseEvent(msgId, byteseg, opts[(int)rcvGrp], sendOpts);
+		//	PhotonNetwork.NetworkingClient.Service();
+		//}
+
+		//public static void Send(this byte[] buffer, byte msgId, ReceiveGroup rcvGrp)
+		//{
+		//	//TODO replace this GC generating mess with something prealloc
+		//	int bytecount = buffer.Length;
+		//	byte[] streambytes = new byte[bytecount];
+		//	Array.Copy(buffer, streambytes, bytecount);
+		//	PhotonNetwork.NetworkingClient.OpRaiseEvent(msgId, streambytes, opts[(int)rcvGrp], sendOpts);
+		//	PhotonNetwork.NetworkingClient.Service();
+		//}
 #elif MIRROR || !UNITY_2019_1_OR_NEWER
 
 		public static bool ReadyToSend { get { return NetworkServer.active || ClientScene.readyConnection != null; } }
@@ -180,15 +190,19 @@ namespace emotitron.Utilities.Networking
 						if (conn.connectionId == 0)
 							continue;
 
+
+#if MIRROR
+						if (conn.isReady && (!refObj || refObj.GetComponent<NetworkIdentity>().observers.ContainsKey(conn.connectionId)))
+						{
+							conn.Send<BytesMessageNonalloc>(msg, channel);
+						}
+#else
 						if (conn.isReady && (!refObj || refObj.GetComponent<NetworkIdentity>().observers.Contains(conn)))
 						{
-#if MIRROR
-							conn.Send<BytesMessageNonalloc>(msg, channel);
-#else
 							conn.SendByChannel(msgId, msg, channel);
 							conn.FlushChannels();
-#endif
 						}
+#endif
 					}
 				}
 

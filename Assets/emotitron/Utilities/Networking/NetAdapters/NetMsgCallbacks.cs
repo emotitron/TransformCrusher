@@ -32,7 +32,7 @@ namespace emotitron.Utilities.Networking
 	/// </summary>
 	public class BytesMessageNonalloc : MessageBase
 	{
-		public static byte[] incomingbuffer = NetMsgSends.reusableIncomingBuffer;
+		public readonly static byte[] incomingbuffer = NetMsgSends.reusableIncomingBuffer;
 		public static byte[] outgoingbuffer = NetMsgSends.reusableOutgoingBuffer;
 		public static ushort length;
 
@@ -41,7 +41,7 @@ namespace emotitron.Utilities.Networking
 		public override void Serialize(NetworkWriter writer)
 		{
 #if MIRROR
-			writer.Write(buffer, 0, length);
+			writer.Write(outgoingbuffer, 0, length);
 #else
 			writer.Write(outgoingbuffer, writer.Position, length);
 #endif
