@@ -355,17 +355,6 @@ namespace emotitron.Compression
 			target = (QuatCrusher)DrawerUtils.GetParent(property.FindPropertyRelative("bits"));
 			MonoBehaviour component = property.serializedObject.targetObject as MonoBehaviour;
 
-			/// If this is a component, then use the attached GameObject as the default target.
-			/// We need this test because SOs will not have an associated GO or Transform.
-			if (target.transform == null && component)
-			{
-				if (target.transform != component.transform)
-				{
-					haschanged = true;
-					target.transform = component.transform;
-				}
-			}
-
 			line = r.yMin;
 
 			//float standalonesheight = target.isStandalone ? (SPACING + LINEHEIGHT) * 2 : 0;
@@ -474,7 +463,6 @@ namespace emotitron.Compression
 				bool enabled = EditorGUI.Toggle(new Rect(ir.xMin + PADDING, line, 32, LINEHEIGHT), GUIContent.none, target.Enabled);
 				if (target.Enabled != enabled)
 				{
-					Debug.Log("Q Toggle");
 					haschanged = true;
 					target.Enabled = enabled;
 				}

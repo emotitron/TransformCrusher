@@ -233,7 +233,7 @@ namespace emotitron.Compression
 					zdelta > 180 ? erot.z + 360 : zdelta < -180 ? erot.z - 360 : erot.z
 					);
 
-				target.rotation = Vector3.Slerp((Vector3)start.rotation, (Vector3)unfucked, t);
+				target.rotation = Vector3.Lerp(srot, (Vector3)unfucked, t);
 			}
 
 			target.scale = Vector3.Lerp(start.scale, end.scale, t);
@@ -274,7 +274,7 @@ namespace emotitron.Compression
 					zdelta > 180 ? erot.z + 360 : zdelta < -180 ? erot.z - 360 : erot.z
 					);
 
-				target.rotation = Vector3.Slerp((Vector3)start.rotation, (Vector3)unfucked, t);
+				target.rotation = Vector3.Lerp(srot, (Vector3)unfucked, t);
 			}
 
 			target.scale = Vector3.LerpUnclamped(start.scale, end.scale, t);
@@ -307,7 +307,7 @@ namespace emotitron.Compression
 					zdelta > 180 ? erot.z + 360 : zdelta < -180 ? erot.z - 360 : erot.z
 					);
 
-				target.rotation = Vector3.Slerp((Vector3)start.rotation, (Vector3)unfucked, t);
+				target.rotation = Vector3.Lerp(srot, (Vector3)unfucked, t);
 			}
 
 			target.scale = CatmulRom.CatmullRomLerp(pre.scale, start.scale, end.scale, post.scale, t);
@@ -340,7 +340,7 @@ namespace emotitron.Compression
 					zdelta > 180 ? erot.z + 360 : zdelta < -180 ? erot.z - 360 : erot.z
 					);
 
-				target.rotation = Vector3.Slerp((Vector3)start.rotation, (Vector3)unfucked, t);
+				target.rotation = Vector3.Lerp(srot, (Vector3)unfucked, t);
 			}
 
 			target.scale = CatmulRom.CatmullRomLerp(pre.scale, start.scale, end.scale, t);
