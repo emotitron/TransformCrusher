@@ -353,7 +353,7 @@ namespace emotitron.Compression
 			property.serializedObject.Update();
 
 			target = (QuatCrusher)DrawerUtils.GetParent(property.FindPropertyRelative("bits"));
-			MonoBehaviour component = property.serializedObject.targetObject as MonoBehaviour;
+
 
 			line = r.yMin;
 
