@@ -88,7 +88,8 @@ namespace emotitron.Utilities.Example
 
 			// MirrorCheck on objects in resource folders should be prefabs. Replace NI on all of those.
 			for (int i = 0; i < objs.Length; i++)
-				AddPhotonView(objs[i].gameObject);
+				if (objs[i].GetComponent<NetworkIdentity>())
+					AddPhotonView(objs[i].gameObject);
 		}
 #else
 	{
