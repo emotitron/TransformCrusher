@@ -23,9 +23,18 @@ namespace emotitron.Utilities.GUIUtilities
 				return ObjectNames.NicifyVariableName(GetType().Name);
 			}
 		}
-		public virtual string AssetPath { get { return @"Assets/emotitron/Resources/"; } }
+		public virtual string AssetPath
+		{
+			get
+			{
+				var script = MonoScript.FromScriptableObject(this);
+				var path = AssetDatabase.GetAssetPath(script);
+				path = System.IO.Path.GetDirectoryName(path);
+				return path + "/Resources/";
+			}
+		}
 
-		
+
 #endif
 	}
 
@@ -40,7 +49,7 @@ namespace emotitron.Utilities.GUIUtilities
 
 		[HideInInspector]
 		public abstract string HelpURL { get; }
-		
+
 #endif
 		public static string AssetName = typeof(T).Name;
 
@@ -76,7 +85,7 @@ namespace emotitron.Utilities.GUIUtilities
 						if (!System.IO.Directory.Exists(single.AssetPath))
 						{
 							System.IO.Directory.CreateDirectory(single.AssetPath);
-							Debug.LogWarning(typeof(T).Name  + " resource directory missing. Recreation success: " + System.IO.Directory.Exists(single.AssetPath));
+							Debug.LogWarning(typeof(T).Name + " resource directory missing. Recreation success: " + System.IO.Directory.Exists(single.AssetPath));
 						}
 
 						if (System.IO.Directory.Exists(single.AssetPath))
@@ -88,7 +97,7 @@ namespace emotitron.Utilities.GUIUtilities
 								AssetDatabase.CreateAsset(single, filepath);
 								Debug.LogWarning(AssetName + " missing. Recreation success: " + System.IO.File.Exists(filepath));
 							}
-							
+
 						}
 					}
 #endif
@@ -255,8 +264,6 @@ namespace emotitron.Utilities.GUIUtilities
 				//EditorGUILayout.PropertyField(sp);
 			}
 
-			so.ApplyModifiedProperties();
-
 			EditorGUILayout.Space();
 
 			if (EditorGUI.EndChangeCheck())
@@ -267,7 +274,7 @@ namespace emotitron.Utilities.GUIUtilities
 		}
 	}
 
-	#endif
+#endif
 
 }
 
