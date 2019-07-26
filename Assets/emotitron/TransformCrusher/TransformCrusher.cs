@@ -859,7 +859,7 @@ namespace emotitron.Compression
 #if !DISABLE_PHYSICS
 
 		/// <summary>
-		/// Compressed to an internally reused CompressedMatrix. WARNING: Be sure to use the contents of this CompressedMatrix immediately, as its values will be overwritten often.
+		/// Compress Rigodbody to an internally reused CompressedMatrix. WARNING: Be sure to use the contents of this CompressedMatrix immediately, as its values will be overwritten often.
 		/// If you need to hold these values, use the nonalloc overload and supply a CompressedMatrix.
 		/// </summary>
 		public CompressedMatrix Compress(Rigidbody rb)
@@ -868,6 +868,9 @@ namespace emotitron.Compression
 			return CompressedMatrix.reusable;
 		}
 
+		/// <summary>
+		/// Compress to Rigidbody to supplied CompressedMatrix.
+		/// </summary>
 		public void Compress(CompressedMatrix nonalloc, Rigidbody rb)
 		{
 			if (!cached)
@@ -889,6 +892,45 @@ namespace emotitron.Compression
 			}
 
 			if (cached_sBits[0] > 0) sclCrusher.Compress(nonalloc.cScl, rb.transform);
+			else nonalloc.cScl.Clear();
+
+		}
+
+		/// <summary>
+		/// Compressed Rigidbody2D to an internally reused CompressedMatrix. WARNING: Be sure to use the contents of this CompressedMatrix immediately, as its values will be overwritten often.
+		/// If you need to hold these values, use the nonalloc overload and supply a CompressedMatrix.
+		/// </summary>
+		public CompressedMatrix Compress(Rigidbody2D rb2d)
+		{
+			Compress(CompressedMatrix.reusable, rb2d);
+			return CompressedMatrix.reusable;
+		}
+
+
+		/// <summary>
+		/// Compress to Rigidbody2D to supplied CompressedMatrix.
+		/// </summary>
+		public void Compress(CompressedMatrix nonalloc, Rigidbody2D rb2d)
+		{
+			if (!cached)
+				CacheValues();
+
+			nonalloc.crusher = this;
+			if (cached_pBits[0] > 0) posCrusher.Compress(nonalloc.cPos, rb2d.position);
+			else nonalloc.cPos.Clear();
+
+			if (rotCrusher.TRSType == TRSType.Quaternion)
+			{
+				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, Quaternion.Euler(0, 0, rb2d.rotation));
+				else nonalloc.cRot.Clear();
+			}
+			else
+			{
+				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, new Vector3(0, 0, rb2d.rotation));
+				else nonalloc.cRot.Clear();
+			}
+
+			if (cached_sBits[0] > 0) sclCrusher.Compress(nonalloc.cScl, rb2d.transform);
 			else nonalloc.cScl.Clear();
 
 		}
@@ -1153,6 +1195,29 @@ namespace emotitron.Compression
 			Set(rb, CompressedMatrix.reusable);
 		}
 
+		public void Set(Rigidbody2D rb2d, Matrix matrix)
+		{
+			if (cached_pBits[0] > 0)
+				posCrusher.Set(rb2d, matrix.position);
+			if (cached_rBits[0] > 0)
+				rotCrusher.Set(rb2d, matrix.rotation);
+			if (cached_sBits[0] > 0)
+				sclCrusher.Apply(rb2d.transform, matrix.scale);
+		}
+		/// <summary>
+		/// Set Rigidbody to values of CompressedMatrix using rb.position and rb.rotation. 
+		/// <para>Any axes not included in the Crusher are left as is. Scale uses rb.transform (rb doesn't handle scaling).</para>
+		/// </summary>
+		public void Set(Rigidbody2D rb2d, CompressedMatrix cmatrix)
+		{
+			if (cached_pBits[0] > 0)
+				posCrusher.Set(rb2d, cmatrix.cPos);
+			if (cached_rBits[0] > 0)
+				rotCrusher.Set(rb2d, cmatrix.cRot);
+			if (cached_sBits[0] > 0)
+				sclCrusher.Apply(rb2d.transform, cmatrix.cScl);
+		}
+
 		/// <summary>
 		/// Move Rigidbody to values of CompressedMatrix using rb.MovePosition and rb.MoveRotation.
 		/// <para>Any axes not included in the Crusher are left as is. Scale uses rb.transform (rb doesn't handle scaling).</para>
@@ -1334,6 +1399,16 @@ namespace emotitron.Compression
 		}
 
 		/// <summary>
+		/// Capture the values of a Rigidbody2d. Applies the lossy decompressed value to the Matrix.
+		/// </summary>
+		/// <param name="m">Lossy decompressed value is stored.</param>
+		public void Capture(Rigidbody2D rb2d, CompressedMatrix cm, Matrix m)
+		{
+			Compress(cm, rb2d);
+			Decompress(m, cm);
+		}
+
+		/// <summary>
 		/// Capture the values of a Rigidbody.
 		/// </summary>
 		/// <param name="m">Lossy decompressed value is stored.</param>
@@ -1352,7 +1427,6 @@ namespace emotitron.Compression
 			m.scale = (Vector3)sclCrusher.Decompress(cm.cScl);
 
 		}
-
 
 		/// <summary>
 		/// Get the total number of bits this Transform is set to write.

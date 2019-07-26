@@ -642,7 +642,7 @@ namespace emotitron.Compression
 		}
 
 		#endregion
-		
+
 		#region Indexer
 
 		/// <summary>
@@ -2105,7 +2105,7 @@ namespace emotitron.Compression
 		}
 
 		/// <summary>
-		/// Rigidbody.MovePosition/MoveRotation only the enabled axes, leaving the disabled axes untouched.
+		/// Set RB pos/rot using only the enabled axes, leaving the disabled axes untouched.
 		/// </summary>
 		/// <param name="rb"></param>
 		/// <param name="e"></param>
@@ -2118,7 +2118,19 @@ namespace emotitron.Compression
 		}
 
 		/// <summary>
-		/// Rigidbody.MovePosition/MoveRotation only the enabled axes, leaving the disabled axes untouched.
+		/// Set RB pos/rot using only the enabled axes, leaving the disabled axes untouched.
+		/// </summary>
+		/// <param name="rb"></param>
+		/// <param name="e"></param>
+		/// <param name="ia">The indicated axis will be used (assuming they are enabled for the crusher). 
+		/// For example if an object only moves up and down in place, IncludedAxes.Y would only apply the Y axis compression values, 
+		/// and would leave the X and Z values as they currently are.</param>
+		public void Set(Rigidbody2D rb, CompressedElement ce, IncludedAxes ia = IncludedAxes.XYZ)
+		{
+			Set(rb, Decompress(ce), ia);
+		}
+		/// <summary>
+		/// Set RB pos/rot using only the enabled axes, leaving the disabled axes untouched.
 		/// </summary>
 		/// <param name="rb"></param>
 		/// <param name="e"></param>
@@ -2156,6 +2168,50 @@ namespace emotitron.Compression
 							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : rb.rotation.eulerAngles.x,
 							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : rb.rotation.eulerAngles.y,
 							cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb.rotation.eulerAngles.z);
+						return;
+
+					default:
+						Debug.LogError("Are you trying to Apply scale to a Rigidbody?");
+						return;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Set RB pos/rot using only the enabled axes, leaving the disabled axes untouched.
+		/// </summary>
+		/// <param name="rb2d"></param>
+		/// <param name="e"></param>
+		/// <param name="ia">The indicated axis will be used (assuming they are enabled for the crusher). 
+		/// For example if an object only moves up and down in place, IncludedAxes.Y would only apply the Y axis compression values, 
+		/// and would leave the X and Z values as they currently are.</param>
+		public void Set(Rigidbody2D rb2d, Element e, IncludedAxes ia = IncludedAxes.XYZ)
+		{
+			{
+				if (!cached)
+					CacheValues();
+
+				switch (_trsType)
+				{
+					case TRSType.Quaternion:
+
+						if (cache_qEnabled)
+						{
+							rb2d.rotation = e.quat.z;
+						}
+
+						return;
+
+					case TRSType.Position:
+
+						rb2d.position = new Vector2(
+							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : rb2d.position.x,
+							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : rb2d.position.y);
+						return;
+
+					case TRSType.Euler:
+
+						rb2d.rotation = cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb2d.rotation;
 						return;
 
 					default:
@@ -2608,7 +2664,7 @@ namespace emotitron.Compression
 				r.xMin -= unpad; r.xMax += unpad;
 				ir.xMin -= unpad; ir.xMax += unpad;
 			}
-			
+
 
 			//GUI.Box(new Rect(ir.xMin - 2, currentline - 2, ir.width + 4, ir.height - 2), GUIContent.none, (GUIStyle)"GroupBox");
 			//SolidTextures.DrawTexture(new Rect(ir.xMin - 2, currentline -2, ir.width + 4, ir.height), SolidTextures.highcontrast2D);
@@ -2629,7 +2685,7 @@ namespace emotitron.Compression
 			if (target.enableTRSTypeSelector)
 			{
 				EditorGUI.indentLevel = 0;
-				var trsType = (TRSType)EditorGUI.EnumPopup(new Rect(fcLeft, currentline, enumwidth, LINEHEIGHT), target.TRSType, (GUIStyle)"GV Gizmo DropDown");
+				var trsType = (TRSType)EditorGUI.EnumPopup(new Rect(fcLeft - 2, currentline, enumwidth, LINEHEIGHT), target.TRSType, (GUIStyle)"GV Gizmo DropDown");
 				EditorGUI.indentLevel = holdindent;
 				if (target.TRSType != trsType)
 				{
@@ -2641,7 +2697,7 @@ namespace emotitron.Compression
 			else if (target.TRSType == TRSType.Quaternion || target.TRSType == TRSType.Euler)
 			{
 				EditorGUI.indentLevel = 0;
-				var trsType = (TRSType)EditorGUI.EnumPopup(new Rect(fcLeft, currentline, enumwidth, LINEHEIGHT), GUIContent.none, (RotationType)target.TRSType, (GUIStyle)"GV Gizmo DropDown");
+				var trsType = (TRSType)EditorGUI.EnumPopup(new Rect(fcLeft - 2, currentline, enumwidth, LINEHEIGHT), GUIContent.none, (RotationType)target.TRSType, (GUIStyle)"GV Gizmo DropDown");
 				EditorGUI.indentLevel = holdindent;
 				if (target.TRSType != trsType)
 				{
@@ -2654,7 +2710,7 @@ namespace emotitron.Compression
 			{
 				GUIContent title =
 					(isWrappedInTransformCrusher || showHeader) ? new GUIContent(Enum.GetName(typeof(TRSType), target.TRSType)) : gc_label; // + " Crshr");
-				GUI.Label(new Rect(fcLeft, currentline, r.width, LINEHEIGHT), title, (GUIStyle)"MiniLabel");
+				GUI.Label(new Rect(fcLeft + 2, currentline, r.width, LINEHEIGHT), title, (GUIStyle)"MiniLabel");
 			}
 
 			/// WorldBounds Enum
