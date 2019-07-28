@@ -2685,7 +2685,7 @@ namespace emotitron.Compression
 			if (target.enableTRSTypeSelector)
 			{
 				EditorGUI.indentLevel = 0;
-				var trsType = (TRSType)EditorGUI.EnumPopup(new Rect(fcLeft - 2, currentline, enumwidth, LINEHEIGHT), target.TRSType, (GUIStyle)"GV Gizmo DropDown");
+				var trsType = (TRSType)EditorGUI.EnumPopup(new Rect(fcLeft - 2, currentline - 1, enumwidth, LINEHEIGHT), target.TRSType, (GUIStyle)"GV Gizmo DropDown");
 				EditorGUI.indentLevel = holdindent;
 				if (target.TRSType != trsType)
 				{
@@ -2697,7 +2697,7 @@ namespace emotitron.Compression
 			else if (target.TRSType == TRSType.Quaternion || target.TRSType == TRSType.Euler)
 			{
 				EditorGUI.indentLevel = 0;
-				var trsType = (TRSType)EditorGUI.EnumPopup(new Rect(fcLeft - 2, currentline, enumwidth, LINEHEIGHT), GUIContent.none, (RotationType)target.TRSType, (GUIStyle)"GV Gizmo DropDown");
+				var trsType = (TRSType)EditorGUI.EnumPopup(new Rect(fcLeft - 2, currentline - 1, enumwidth, LINEHEIGHT), GUIContent.none, (RotationType)target.TRSType, (GUIStyle)"GV Gizmo DropDown");
 				EditorGUI.indentLevel = holdindent;
 				if (target.TRSType != trsType)
 				{
@@ -2759,7 +2759,7 @@ namespace emotitron.Compression
 				EditorGUI.indentLevel = 0;
 
 				var uniformAxes =
-					(ElementCrusher.UniformAxes)EditorGUI.EnumPopup(new Rect(fcLeft2, currentline, enumwidth, LINEHEIGHT), GUIContent.none, target.uniformAxes, (GUIStyle)"GV Gizmo DropDown");
+					(ElementCrusher.UniformAxes)EditorGUI.EnumPopup(new Rect(fcLeft2, currentline - 1, enumwidth, LINEHEIGHT), GUIContent.none, target.uniformAxes, (GUIStyle)"GV Gizmo DropDown");
 				if (target.uniformAxes != uniformAxes)
 				{
 					haschanged = true;
