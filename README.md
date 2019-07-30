@@ -13,9 +13,9 @@ You are welcome to use this library for games, however scripts/components not ex
 [**Transform Crusher Free Current Release** - Unity Package Download](https://github.com/emotitron/TransformCrusher/releases)
 
 ## Transform Crusher PRO on Unity Asset Store
-Offers bit level control of the compression settings, rather than just the presets.
+Offers bit level control of the compression settings, rather than just the presets. I have merged PRO into my only current Asset Store product, which is Simple Network Sync. You can just import only the TransformCrusher folder if you don't want to make use of the sync components.
 
-[**Transform Crusher PRO** - Unity Asset Store](https://assetstore.unity.com/packages/tools/network/transform-crusher-116587)
+[**Transform Crusher PRO / Simple Network Sync** - Unity Asset Store](https://assetstore.unity.com/packages/tools/network/simple-network-sync-134256)
 
 ## Documentation
 [Transform Crusher Documentation](https://docs.google.com/document/d/14X8Bmg6UMecx8SlVQzfjrBYBf4ZYRayOLXipgB0BqPU/edit?usp=sharing)
