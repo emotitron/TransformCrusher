@@ -3,7 +3,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using emotitron.Debugging;
 using emotitron.Utilities.Networking;
 
 #if PUN_2_OR_NEWER

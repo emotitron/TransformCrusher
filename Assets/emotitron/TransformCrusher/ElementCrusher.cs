@@ -1,7 +1,6 @@
 ﻿//Copyright 2018-2019, Davin Carten, All rights reserved
 
 using UnityEngine;
-using emotitron.Debugging;
 using System.Collections.Generic;
 using System;
 using System.Collections.ObjectModel;
@@ -737,6 +736,20 @@ namespace emotitron.Compression
 
 		#region Byte[] Writers
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+		private void TryingToWriteQuatAsEulerError()
+		{
+			if (TRSType != TRSType.Quaternion)
+				Debug.LogError("You seem to be trying to compress a Quaternion with a crusher that is set up for " +
+					System.Enum.GetName(typeof(TRSType), TRSType) + ".");
+		}
+
+		private void TryingToCrushTransformUsingGenericWarning()
+		{
+			Debug.Log("You are sending a transform to be crushed, but the Element Type is Generic - did you want Position? Ideally change the crusher from Generic to the correct TRS.");
+		}
+#endif
+
 		/// <summary>
 		/// Automatically use the correct transform TRS element based on the TRSType and local settings of each Crusher.
 		/// </summary>
@@ -763,7 +776,9 @@ namespace emotitron.Compression
 					return;
 
 				default:
-					XDebug.Log("You are sending a transform to be crushed, but the Element Type is Generic - did you want Position?");
+#if UNITY_EDITOR
+					TryingToCrushTransformUsingGenericWarning();
+#endif
 					Write(nonalloc, (local) ? trans.localPosition : trans.position, bytes, ref bitposition, bcl);
 					return;
 			}
@@ -786,7 +801,9 @@ namespace emotitron.Compression
 					return Write(trans.localScale, bytes, ref bitposition, bcl);
 
 				default:
-					XDebug.Log("You are sending a transform to be crushed, but the Element Type is Generic - did you want Position?");
+#if UNITY_EDITOR
+					TryingToCrushTransformUsingGenericWarning();
+#endif
 					return Write((local) ? trans.localPosition : trans.position, bytes, ref bitposition, bcl);
 			}
 		}
@@ -944,9 +961,9 @@ namespace emotitron.Compression
 			if (!cached)
 				CacheValues();
 
-			XDebug.LogError("You seem to be trying to compress a Quaternion with a crusher that is set up for " +
-				System.Enum.GetName(typeof(TRSType), TRSType) + ".", TRSType != TRSType.Quaternion, true);
-
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			TryingToWriteQuatAsEulerError();
+#endif
 			nonalloc.Set(this, _qcrusher.Write(quat, bytes, ref bitposition));
 		}
 		[System.Obsolete()]
@@ -955,9 +972,9 @@ namespace emotitron.Compression
 			if (!cached)
 				CacheValues();
 
-			XDebug.LogError("You seem to be trying to compress a Quaternion with a crusher that is set up for " +
-				System.Enum.GetName(typeof(TRSType), TRSType) + ".", TRSType != TRSType.Quaternion, true);
-
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			TryingToWriteQuatAsEulerError();
+#endif
 			return new CompressedElement(this, _qcrusher.Write(quat, bytes, ref bitposition));
 		}
 
@@ -987,7 +1004,9 @@ namespace emotitron.Compression
 					return;
 
 				default:
-					XDebug.Log("You are sending a transform to be crushed, but the Element Type is Generic - did you want Position?");
+#if UNITY_EDITOR
+					Debug.Log("You are sending a transform to be crushed, but the Element Type is Generic - did you want Position?");
+#endif
 					Write(nonalloc, (local) ? trans.localPosition : trans.position, buffer, ref bitposition, bcl);
 					return;
 			}
@@ -1027,9 +1046,11 @@ namespace emotitron.Compression
 			if (!cached)
 				CacheValues();
 
-			XDebug.LogError("You seem to be trying to compress a Quaternion with a crusher that is set up for " +
-				System.Enum.GetName(typeof(TRSType), TRSType) + ".", TRSType != TRSType.Quaternion, true);
-
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			if (TRSType != TRSType.Quaternion)
+				Debug.LogError("You seem to be trying to compress a Quaternion with a crusher that is set up for " +
+					System.Enum.GetName(typeof(TRSType), TRSType) + ".");
+#endif
 			nonalloc.Set(this, _qcrusher.Write(quat, bytes, ref bitposition));
 		}
 
@@ -1242,7 +1263,9 @@ namespace emotitron.Compression
 					return;
 
 				default:
-					XDebug.Log("You are sending a transform to be crushed, but the Element Type is Generic - did you want Position?");
+#if UNITY_EDITOR
+					TryingToCrushTransformUsingGenericWarning();
+#endif
 					Write(nonalloc, (local) ? trans.localPosition : trans.position, ref buffer, ref bitposition, bcl);
 					return;
 			}
@@ -1268,7 +1291,9 @@ namespace emotitron.Compression
 					return;
 
 				default:
-					XDebug.Log("You are sending a transform to be crushed, but the Element Type is Generic - did you want Position?");
+#if UNITY_EDITOR
+					TryingToCrushTransformUsingGenericWarning();
+#endif
 					Write((local) ? trans.localPosition : trans.position, ref buffer, ref bitposition, bcl);
 					return;
 			}
@@ -1589,7 +1614,9 @@ namespace emotitron.Compression
 					return;
 
 				default:
-					XDebug.LogWarning("You are sending a transform to be crushed, but the Element Type is Generic?  Assuming position - change the crusher from Generic to the correct TRS.", true, true);
+#if UNITY_EDITOR
+					TryingToCrushTransformUsingGenericWarning();
+#endif
 					Compress(nonalloc, (local) ? trans.localPosition : trans.position);
 					return;
 			}
@@ -1600,30 +1627,6 @@ namespace emotitron.Compression
 			Compress(CompressedElement.reusable, trans);
 			return CompressedElement.reusable;
 		}
-
-		//[System.Obsolete()]
-		//public CompressedElement Compress(Transform trans)
-		//{
-		//	switch (TRSType)
-		//	{
-		//		case TRSType.Position:
-		//			return Compress((local) ? trans.localPosition : trans.position);
-
-		//		case TRSType.Euler:
-		//			return Compress((local) ? trans.localEulerAngles : trans.eulerAngles);
-
-		//		case TRSType.Quaternion:
-		//			return Compress((local) ? trans.localRotation : trans.rotation);
-
-		//		case TRSType.Scale:
-		//			return Compress((local) ? trans.localScale : trans.lossyScale);
-
-		//		default:
-		//			XDebug.LogWarning("You are sending a transform to be crushed, but the Element Type is Generic?  Assuming position - change the crusher from Generic to the correct TRS.", true, true);
-		//			return Compress((local) ? trans.localPosition : trans.position);
-		//	}
-		//}
-
 
 		/// <summary>
 		/// CompressAndWrite doesn't produce any temporary 40byte bitstream structs, but rather will compress and write directly to the supplied bitstream.
@@ -1651,7 +1654,9 @@ namespace emotitron.Compression
 					break;
 
 				default:
-					XDebug.LogWarning("You are sending a transform to be crushed, but the Element Type is Generic?  Assuming position - change the crusher from Generic to the correct TRS.", true, true);
+#if UNITY_EDITOR
+					TryingToCrushTransformUsingGenericWarning();
+#endif
 					CompressAndWrite((local) ? trans.localPosition : trans.position, ref bitstream);
 					break;
 			}
@@ -1682,7 +1687,9 @@ namespace emotitron.Compression
 					break;
 
 				default:
-					XDebug.LogWarning("You are sending a transform to be crushed, but the Element Type is Generic?  Assuming position - change the crusher from Generic to the correct TRS.", true, true);
+#if UNITY_EDITOR
+					TryingToCrushTransformUsingGenericWarning();
+#endif
 					CompressAndWrite((local) ? trans.localPosition : trans.position, buffer, ref bitposition);
 					break;
 			}
@@ -1853,8 +1860,9 @@ namespace emotitron.Compression
 			if (!cached)
 				CacheValues();
 
-			XDebug.LogError("You seem to be trying to compress a Quaternion with a crusher that is set up for " +
-				System.Enum.GetName(typeof(TRSType), TRSType) + ".", TRSType != TRSType.Quaternion, true);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			TryingToWriteQuatAsEulerError();
+#endif
 
 			if (cache_qEnabled)
 				nonalloc.Set(this, _qcrusher.Compress(quat));
@@ -1876,8 +1884,9 @@ namespace emotitron.Compression
 			if (!cached)
 				CacheValues();
 
-			XDebug.LogError("You seem to be trying to compress a Quaternion with a crusher that is set up for " +
-				System.Enum.GetName(typeof(TRSType), TRSType) + ".", TRSType != TRSType.Quaternion, true);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			TryingToWriteQuatAsEulerError();
+#endif
 
 			if (cache_qEnabled)
 				bitstream.Write(_qcrusher.Compress(quat), cache_qBits);
@@ -1892,8 +1901,9 @@ namespace emotitron.Compression
 			if (!cached)
 				CacheValues();
 
-			XDebug.LogError("You seem to be trying to compress a Quaternion with a crusher that is set up for " +
-				System.Enum.GetName(typeof(TRSType), TRSType) + ".", TRSType != TRSType.Quaternion, true);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			TryingToWriteQuatAsEulerError();
+#endif
 
 			if (cache_qEnabled)
 				buffer.Write(_qcrusher.Compress(quat), ref bitposition, cache_qBits);
@@ -2386,7 +2396,9 @@ namespace emotitron.Compression
 
 			if (TRSType == TRSType.Quaternion)
 			{
-				XDebug.LogError("You cannot clamp a quaternion.");
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+				Debug.LogError("You cannot clamp a quaternion.");
+#endif
 				return v3;
 			}
 			if (TRSType == TRSType.Scale)

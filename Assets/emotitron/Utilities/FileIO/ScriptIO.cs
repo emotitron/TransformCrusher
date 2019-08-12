@@ -33,7 +33,9 @@ namespace emotitron.Utilities.FileIO
 			}
 			catch (IOException IOEx)
 			{
-				Debugging.XDebug.Log(!Debugging.XDebug.logInfo ? null : ("CS File locked at the moment." + IOEx));
+#if UNITY_EDITOR
+				UnityEngine.Debug.Log("CS File locked at the moment." + IOEx);
+#endif
 				return null;
 			}
 		}

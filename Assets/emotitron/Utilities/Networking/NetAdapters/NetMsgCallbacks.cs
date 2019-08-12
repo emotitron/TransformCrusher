@@ -2,7 +2,6 @@
 
 using System.Collections.Generic;
 using UnityEngine;
-using emotitron.Debugging;
 using emotitron.Compression;
 
 #if PUN_2_OR_NEWER

@@ -1117,7 +1117,7 @@ namespace emotitron.Compression
 			nonalloc.Set(
 				this,
 				(cached_pBits[0] > 0) ? (Vector3)posCrusher.Decompress(compMatrix.cPos) : new Vector3(),
-				(cached_rBits[0] > 0) ? rotCrusher.Decompress(compMatrix.cRot) : new Element(),
+				(cached_rBits[0] > 0) ? rotCrusher.Decompress(compMatrix.cRot) : (rotCrusher.TRSType == TRSType.Quaternion) ? new Element(new Quaternion(0, 0, 0, 1)) : new Element(new Vector3(0, 0, 0)),
 				(cached_sBits[0] > 0) ? (Vector3)sclCrusher.Decompress(compMatrix.cScl) : new Vector3()
 				);
 		}
@@ -1130,7 +1130,7 @@ namespace emotitron.Compression
 			return new Matrix(
 				this,
 				(cached_pBits[0] > 0) ? (Vector3)posCrusher.Decompress(compMatrix.cPos) : new Vector3(),
-				(cached_rBits[0] > 0) ? rotCrusher.Decompress(compMatrix.cRot) : new Element(),
+				(cached_rBits[0] > 0) ? rotCrusher.Decompress(compMatrix.cRot) : (rotCrusher.TRSType == TRSType.Quaternion) ? new Element(new Quaternion(0, 0, 0, 1)) : new Element(new Vector3(0, 0, 0)),
 				(cached_sBits[0] > 0) ? (Vector3)sclCrusher.Decompress(compMatrix.cScl) : new Vector3()
 				);
 		}

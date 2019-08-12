@@ -3,7 +3,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using emotitron.Debugging;
 using emotitron.Utilities.Networking;
 
 #if PUN_2_OR_NEWER
@@ -70,14 +69,6 @@ namespace emotitron.Compression.Sample
 
 		/// reusable bitstream.
 		public static byte[] bitstream = new byte[48];
-
-		void Awake()
-		{
-			/// If you would like to get warnings from the various compression DLLs we need to send Assert fails to the Debug.Log - 
-			/// This does that.
-			XDebug.ForwardTraceListener(true);
-			XDebug.RedirectConsoleErrorToDebug(true);
-		}
 
 #if !PUN_2_OR_NEWER
 		public override void OnStartServer() { NetMsgCallbacks.RegisterDefaultHandler(); }

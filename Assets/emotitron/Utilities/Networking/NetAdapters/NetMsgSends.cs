@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-using emotitron.Debugging;
 using emotitron.Compression;
 
 
@@ -177,6 +176,7 @@ namespace emotitron.Utilities.Networking
 			{
 				if (NetworkServer.active)
 				{
+					var observers = refObj.GetComponent<NetworkIdentity>().observers;
 #if MIRROR
 					foreach (NetworkConnection conn in NetworkServer.connections.Values)
 #else
@@ -192,12 +192,12 @@ namespace emotitron.Utilities.Networking
 
 
 #if MIRROR
-						if (conn.isReady && (!refObj || refObj.GetComponent<NetworkIdentity>().observers.ContainsKey(conn.connectionId)))
+						if (conn.isReady && (!refObj || observers.ContainsKey(conn.connectionId)))
 						{
 							conn.Send<BytesMessageNonalloc>(msg, channel);
 						}
 #else
-						if (conn.isReady && (!refObj || refObj.GetComponent<NetworkIdentity>().observers.Contains(conn)))
+						if (conn.isReady && (!refObj || observers.Contains(conn)))
 						{
 							conn.SendByChannel(msgId, msg, channel);
 							conn.FlushChannels();
