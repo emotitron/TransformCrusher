@@ -1415,7 +1415,7 @@ namespace emotitron.Compression
 		public void Capture(Transform tr, CompressedMatrix cm, Matrix m)
 		{
 			// pos
-			posCrusher.Compress(cm.cPos, tr.position);
+			posCrusher.Compress(cm.cPos, tr);
 			m.position = (Vector3)posCrusher.Decompress(cm.cPos);
 
 			// rot
