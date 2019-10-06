@@ -12,7 +12,7 @@ using Photon.Realtime;
 using ExitGames.Client.Photon;
 #elif MIRROR
 using Mirror;
-#elif !UNITY_2019_1_OR_NEWER
+#else
 using UnityEngine.Networking;
 #endif
 
@@ -20,7 +20,6 @@ using UnityEngine.Networking;
 
 namespace emotitron.Utilities.Networking
 {
-
 	public enum ReceiveGroup { Others, All, Master }
 
 	/// <summary>
@@ -43,121 +42,61 @@ namespace emotitron.Utilities.Networking
 			new RaiseEventOptions() { Receivers = ReceiverGroup.MasterClient }
 		};
 
-		private static SendOptions sendOpts = new SendOptions();
+		private static SendOptions sendOptsUnreliable = new SendOptions() { DeliveryMode = DeliveryMode.UnreliableUnsequenced };
+		private static SendOptions sendOptsReliable = new SendOptions() { DeliveryMode = DeliveryMode.Reliable };
 
-		public static void Send(this byte[] buffer, int bitposition, GameObject refObj, ReceiveGroup rcvGrp)
+		public static void Send(this byte[] buffer, int bitposition, GameObject refObj, ReceiveGroup rcvGrp, bool sendReliable = false, bool flush = false)
 		{
 			int bytecount = (bitposition + 7) >> 3;
-			//TODO replace this GC generating mess with something prealloc
+
 			System.ArraySegment<byte> byteseg = new System.ArraySegment<byte>(buffer, 0, bytecount);
 
-			PhotonNetwork.NetworkingClient.OpRaiseEvent(NetMsgCallbacks.DEF_MSG_ID, byteseg, opts[(int)rcvGrp], sendOpts);
-			PhotonNetwork.NetworkingClient.Service();
+			PhotonNetwork.NetworkingClient.OpRaiseEvent(NetMsgCallbacks.DEF_MSG_ID, byteseg, opts[(int)rcvGrp], (sendReliable) ? sendOptsReliable : sendOptsUnreliable);
+
+			if (flush)
+				PhotonNetwork.NetworkingClient.Service();
 		}
 
-		//public static void Send(this byte[] buffer, ushort bytecount, byte msgId, ReceiveGroup rcvGrp)
-		//{
-		//	//TODO replace this GC generating mess with something prealloc
-		//	System.ArraySegment<byte> byteseg = new System.ArraySegment<byte>(buffer, 0, bytecount);
-
-		//	PhotonNetwork.NetworkingClient.OpRaiseEvent(msgId, byteseg, opts[(int)rcvGrp], sendOpts);
-		//	PhotonNetwork.NetworkingClient.Service();
-		//}
-
-		//public static void Send(this byte[] buffer, int bitposition, byte msgId, ReceiveGroup rcvGrp)
-		//{
-		//	int bytecount = (bitposition + 7) >> 3;
-
-		//	//TODO replace this GC generating mess with something prealloc
-		//	System.ArraySegment<byte> byteseg = new System.ArraySegment<byte>(buffer, 0, bytecount);
-
-		//	PhotonNetwork.NetworkingClient.OpRaiseEvent(msgId, byteseg, opts[(int)rcvGrp], sendOpts);
-		//	PhotonNetwork.NetworkingClient.Service();
-		//}
-
-		//public static void Send(this byte[] buffer, byte msgId, ReceiveGroup rcvGrp)
-		//{
-		//	//TODO replace this GC generating mess with something prealloc
-		//	int bytecount = buffer.Length;
-		//	byte[] streambytes = new byte[bytecount];
-		//	Array.Copy(buffer, streambytes, bytecount);
-		//	PhotonNetwork.NetworkingClient.OpRaiseEvent(msgId, streambytes, opts[(int)rcvGrp], sendOpts);
-		//	PhotonNetwork.NetworkingClient.Service();
-		//}
-#elif MIRROR || !UNITY_2019_1_OR_NEWER
-
+#else
 		public static bool ReadyToSend { get { return NetworkServer.active || ClientScene.readyConnection != null; } }
 		public static bool AmActiveServer { get { return NetworkServer.active; } }
 
-		//static readonly NetworkWriter reusableunetwriter = new NetworkWriter();
 		public static readonly BytesMessageNonalloc bytesmsg = new BytesMessageNonalloc();
 
-		//[System.Obsolete]
-		//public static void Send(ref Bitstream buffer, short msgId, ReceiveGroup rcvGrp)
-		//{
-		//	BitstreamExtensions.ReadOut(ref buffer, reusableOutgoingBuffer);
-		//	BytesMessageNonalloc.buffer = reusableOutgoingBuffer;
-		//	BytesMessageNonalloc.length = (ushort)buffer.BytesUsed;
-		//	Send(null, bytesmsg, msgId, rcvGrp);
-		//}
-
-		public static void Send(this byte[] buffer, int bitcount, GameObject refObj, ReceiveGroup rcvGrp)
+		public static void Send(this byte[] buffer, int bitcount, GameObject refObj, ReceiveGroup rcvGrp, bool sendReliable = false, bool flush = false)
 		{
 			BytesMessageNonalloc.outgoingbuffer = buffer;
 			BytesMessageNonalloc.length = (ushort)((bitcount + 7) >> 3);
-			Send(refObj, bytesmsg, NetMsgCallbacks.DEF_MSG_ID, rcvGrp);
+			Send(refObj, bytesmsg, NetMsgCallbacks.DEF_MSG_ID, rcvGrp, sendReliable ? 0 : 1, flush);
 		}
 
-		//[System.Obsolete()]
-		//public static void Send(this byte[] buffer, ReceiveGroup rcvGrp)
-		//{
-		//	BytesMessageNonalloc.buffer = buffer;
-		//	BytesMessageNonalloc.length = (ushort)buffer.Length;
-		//	Send(null, bytesmsg, NetMsgCallbacks.DEF_MSG_ID, rcvGrp);
-		//}
-
-		//[System.Obsolete()]
-		//public static void Send(this byte[] buffer, int bitcount, short msgId, ReceiveGroup rcvGrp)
-		//{
-		//	BytesMessageNonalloc.buffer = buffer;
-		//	BytesMessageNonalloc.length = (ushort)((bitcount + 7) >> 3);
-		//	Send(null, bytesmsg, msgId, rcvGrp);
-		//}
-
-		//[System.Obsolete()]
-		//public static void Send(this byte[] buffer, ushort bytecount, short msgId, ReceiveGroup rcvGrp)
-		//{
-		//	BytesMessageNonalloc.buffer = buffer;
-		//	BytesMessageNonalloc.length = bytecount;
-		//	Send(null, bytesmsg, msgId, rcvGrp);
-		//}
-
-
-
-		//[System.Obsolete()]
-		//public static void Send(this byte[] buffer, short msgId, ReceiveGroup rcvGrp)
-		//{
-		//	BytesMessageNonalloc.buffer = buffer;
-		//	BytesMessageNonalloc.length = (ushort)buffer.Length;
-		//	Send(null, bytesmsg, msgId, rcvGrp);
-		//}
-
+#if BANDWIDTH_MONITOR
+		static int monitorTime;
+		static int byteCountForTime;
+#endif
 		/// <summary>
 		/// Sends byte[] to each client, making any needed per client alterations, such as changing the frame offset value in the first byte.
 		/// </summary>
-		public static void Send(GameObject refObj, BytesMessageNonalloc msg, short msgId, ReceiveGroup rcvGrp, int channel = Channels.DefaultUnreliable)
+		public static void Send(GameObject refObj, BytesMessageNonalloc msg, short msgId, ReceiveGroup rcvGrp, int channel = Channels.DefaultUnreliable, bool flush = false)
 		{
-			/// Server send to all. Owner client send to server.
-			if (rcvGrp == ReceiveGroup.All)
+
+#if BANDWIDTH_MONITOR
+
+			if (monitorTime != (int)Time.time)
 			{
-				if (NetworkServer.active)
-#if MIRROR
-					NetworkServer.SendToAll<BytesMessageNonalloc>(msg, channel);
-#else
-					NetworkServer.SendByChannelToReady(refObj, msgId, msg, channel);
-#endif
+				/// Print last total
+				Debug.Log("Sent Bytes/Sec: " + byteCountForTime);
+				byteCountForTime = 0;
+				monitorTime = (int)Time.time;
 			}
-			else if (rcvGrp == ReceiveGroup.Master)
+
+			byteCountForTime += BytesMessageNonalloc.length;
+#endif
+			/////TEST
+			//rcvGrp = ReceiveGroup.All;
+
+			/// Client's cant send to all, so we will just send to server to make 'others' always work.
+			if (!NetworkServer.active)
 			{
 				var conn = ClientScene.readyConnection;
 				if (conn != null)
@@ -166,92 +105,58 @@ namespace emotitron.Utilities.Networking
 					conn.Send<BytesMessageNonalloc>(msg, channel);
 #else
 					conn.SendByChannel(msgId, msg, channel);
-					conn.FlushChannels();
+
+					if (flush)
+						conn.FlushChannels();
 #endif
 				}
+			}
+			/// Server send to all. Owner client send to server.
+			else if (rcvGrp == ReceiveGroup.All)
+			{
+#if MIRROR
+				var ni = (refObj) ? refObj.GetComponent<NetworkIdentity>() : null;
+				NetworkServer.SendToReady(ni, msg, channel);
+#else
+				NetworkServer.SendByChannelToReady(refObj, msgId, msg, channel);
+#endif
 
 			}
+
 			/// Send To Others
 			else
 			{
-				if (NetworkServer.active)
-				{
-					var observers = refObj.GetComponent<NetworkIdentity>().observers;
+				var ni = (refObj) ? refObj.GetComponent<NetworkIdentity>() : null;
+				var observers = ni ? ni.observers : null;
 #if MIRROR
-					foreach (NetworkConnection conn in NetworkServer.connections.Values)
+				foreach (NetworkConnection conn in NetworkServer.connections.Values)
 #else
-					foreach (NetworkConnection conn in NetworkServer.connections)
+				foreach (NetworkConnection conn in NetworkServer.connections)
 #endif
+				{
+					if (conn == null)
+						continue;
+
+					/// Don't send to self if Host
+					if (conn.connectionId == 0)
+						continue;
+
+#if MIRROR
+					if (conn.isReady && (observers != null && observers.ContainsKey(conn.connectionId)))
 					{
-						if (conn == null)
-							continue;
-
-						/// Don't send to self if Host
-						if (conn.connectionId == 0)
-							continue;
-
-
-#if MIRROR
-						if (conn.isReady && (!refObj || observers.ContainsKey(conn.connectionId)))
-						{
-							conn.Send<BytesMessageNonalloc>(msg, channel);
-						}
-#else
-						if (conn.isReady && (!refObj || observers.Contains(conn)))
-						{
-							conn.SendByChannel(msgId, msg, channel);
-							conn.FlushChannels();
-						}
-#endif
+						conn.Send<BytesMessageNonalloc>(msg, channel);
 					}
-				}
-
-				/// Client's cant send to all, so we will just send to server to make 'others' always work.
-				else if (ClientScene.readyConnection != null)
-				{
-#if MIRROR
-					ClientScene.readyConnection.Send<BytesMessageNonalloc>(msg, channel);
 #else
-					ClientScene.readyConnection.SendByChannel(msgId, msg, channel);
-					ClientScene.readyConnection.FlushChannels();
-
+					if (conn.isReady && (observers == null || observers.Contains(conn)))
+					{
+						conn.SendByChannel(msgId, msg, channel);
+						if (flush)
+							conn.FlushChannels();
+					}
 #endif
 				}
 			}
-
 		}
-
-		//		public static void SendToConn(this byte[] buffer, int bitcount, short msgId, object targConn, int targConnId, ReceiveGroup rcvGrp, int channel = Channels.DefaultUnreliable)
-		//		{
-		//			bytesmsg.buffer = buffer;
-		//			bytesmsg.length = (ushort)((bitcount + 7) >> 3);
-		//			SendToConn(bytesmsg, msgId, targConn, targConnId, rcvGrp, channel);
-		//		}
-
-		//		public static void SendToConn(BytesMessageNonalloc msg, short msgId, object targConn, int targConnId, ReceiveGroup rcvGrp, int channel = Channels.DefaultUnreliable)
-		//		{
-		//			{
-		//				if (NetworkServer.active)
-		//				{
-		//					NetworkConnection conn = (targConn as NetworkConnection);
-
-		//					if (conn == null)
-		//						return;
-
-		//					if (conn.isReady)
-		//					{
-		//#if MIRROR
-		//						conn.Send<BytesMessageNonalloc>(msg, channel);
-		//#else
-		//						conn.SendByChannel(msgId, msg, channel);
-		//						conn.FlushChannels();
-		//#endif
-		//					}
-		//				}
-		//			}
-		//		}
-
-
 #endif
 	}
 
