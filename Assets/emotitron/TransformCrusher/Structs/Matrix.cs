@@ -279,7 +279,7 @@ namespace emotitron.Compression
 						zdelta > 180 ? erot.z + 360 : zdelta < -180 ? erot.z - 360 : erot.z
 						);
 
-					target.rotation = Vector3.Lerp(srot, (Vector3)unfucked, t);
+					target.rotation = Vector3.LerpUnclamped(srot, (Vector3)unfucked, t);
 				}
 			}
 			else
@@ -315,7 +315,7 @@ namespace emotitron.Compression
 						zdelta > 180 ? erot.z + 360 : zdelta < -180 ? erot.z - 360 : erot.z
 						);
 
-					target.rotation = Vector3.Lerp(srot, (Vector3)unfucked, t);
+					target.rotation = Vector3.LerpUnclamped(srot, (Vector3)unfucked, t);
 				}
 			}
 			else
@@ -352,7 +352,7 @@ namespace emotitron.Compression
 						zdelta > 180 ? erot.z + 360 : zdelta < -180 ? erot.z - 360 : erot.z
 						);
 
-					target.rotation = Vector3.Lerp(srot, (Vector3)unfucked, t);
+					target.rotation = Vector3.LerpUnclamped(srot, (Vector3)unfucked, t);
 				}
 			}
 			else
