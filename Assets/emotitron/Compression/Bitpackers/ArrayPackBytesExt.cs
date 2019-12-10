@@ -250,6 +250,49 @@ namespace emotitron.Compression
 			return zagzig;
 		}
 
+		/// <summary>
+		/// EXPERIMENTAL: Primary Write signed value as PackedByte. 
+		/// </summary>
+		public static void WriteSignedPackedBytes64(this byte[] buffer, long value, ref int bitposition, int bits)
+		{
+			ulong zigzag = (new ByteConvert() { int64 = ((value << 1) ^ (value >> 63)) }).uint64;
+			buffer.WritePackedBytes(zigzag, ref bitposition, bits);
+		}
+		/// <summary>
+		/// EXPERIMENTAL: Read signed value from PackedByte. 
+		/// </summary>
+		public static long ReadSignedPackedBytes64(this byte[] buffer, ref int bitposition, int bits)
+		{
+			long value = (new ByteConvert() { uint64 = buffer.ReadPackedBytes(ref bitposition, bits) }).int64;
+			long zagzig = ((value >> 1) ^ (-(value & 1)));
+			return zagzig;
+		}
+
+		[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+		public struct ByteConvert
+		{
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.SByte int8;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Byte uint8;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Int16 int16;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.UInt16 uint16;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Int32 int32;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.UInt32 uint32;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Int64 int64;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.UInt64 uint64;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Single float32;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Double float64;
+		}
+
 		#endregion
 	}
 }

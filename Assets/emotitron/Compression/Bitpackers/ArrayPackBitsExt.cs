@@ -68,7 +68,7 @@ namespace emotitron.Compression
 
 			//UnityEngine.Debug.Log("Write ulong[] PBits " + value + " = " + sizebits + " : " + valuebits);
 		}
-		
+
 		/// <summary>
 		/// EXPERIMENTAL: Primary WritePacked Method
 		/// </summary>
@@ -251,13 +251,58 @@ namespace emotitron.Compression
 		/// </summary>
 		public static int ReadSignedPackedBits(this byte[] buffer, ref int bitposition, int bits)
 		{
-			uint value = (uint)buffer.ReadPackedBits(ref bitposition, bits);
+			long value = (new ByteConvert() { uint64 = buffer.ReadPackedBytes(ref bitposition, bits) }).int64;
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
+			return zagzig;
+		}
+
+
+		/// <summary>
+		/// EXPERIMENTAL: Primary Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public static void WriteSignedPackedBits64(this byte[] buffer, long value, ref int bitposition, int bits)
+		{
+			ulong zigzag = (new ByteConvert() { int64 = ((value << 1) ^ (value >> 63)) }).uint64;
+			buffer.WritePackedBits(zigzag, ref bitposition, bits);
+		}
+		/// <summary>
+		/// EXPERIMENTAL: Primary Read packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public static long ReadSignedPackedBits64(this byte[] buffer, ref int bitposition, int bits)
+		{
+			long value = (new ByteConvert() { uint64 = buffer.ReadPackedBytes(ref bitposition, bits) }).int64;
+			long zagzig = ((value >> 1) ^ (-(value & 1)));
 			return zagzig;
 		}
 
 		#endregion
 
+		[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+		public struct ByteConvert
+		{
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.SByte int8;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Byte uint8;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Int16 int16;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.UInt16 uint16;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Int32 int32;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.UInt32 uint32;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Int64 int64;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.UInt64 uint64;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Single float32;
+			[System.Runtime.InteropServices.FieldOffset(0)]
+			public System.Double float64;
+		}
 	}
 }
 
