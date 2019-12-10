@@ -2685,8 +2685,11 @@ namespace emotitron.Compression
 			//SolidTextures.DrawTexture(new Rect(ir.xMin - 2, currentline - 2, ir.width + 4, ir.height - BTM_PAD), SolidTextures.lowcontrast2D);
 			//SolidTextures.DrawTexture(new Rect(ir.xMin, currentline, ir.width, 16 + 1/*+ SPACING*/), SolidTextures.contrastgray2D);
 
+#if UNITY_2019_3_OR_NEWER
+			const int localtoggleleft = 58;
+#else
 			const int localtoggleleft = 60;
-
+#endif
 			float fcLeft = ir.xMin + ((isWorldBounds) ? 4 : 15);
 			float enumwidth = (ir.width - 99) / 2 - 1;
 			float fcLeft2 = fcLeft + enumwidth + 2;

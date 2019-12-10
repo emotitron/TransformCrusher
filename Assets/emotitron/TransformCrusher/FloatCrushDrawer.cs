@@ -90,8 +90,13 @@ namespace emotitron.Compression
 		Rect r;
 		bool haschanged;
 
+		static protected GUIStyle smallFieldStyle;
+
 		public override void OnGUI(Rect r, SerializedProperty property, GUIContent label)
 		{
+			if (smallFieldStyle == null)
+				smallFieldStyle = new GUIStyle("MiniTextField") { fontSize = 10 };
+
 			EditorGUI.BeginProperty(r, label, property);
 
 			haschanged = false;
@@ -368,7 +373,11 @@ namespace emotitron.Compression
 					if (FC_ISPRO && fc.BitsDeterminedBy == (BitsDeterminedBy.SetBits))
 					{
 						EditorGUI.indentLevel = holdindent;
+#if UNITY_2019_3_OR_NEWER
+						int bits = EditorGUI.IntSlider(new Rect(fieldleft, line, fieldwidth, LINEHEIGHT + 2), GUIContent.none, fc.Bits, 0, 32);
+#else
 						int bits = EditorGUI.IntSlider(new Rect(fieldleft, line, fieldwidth, LINEHEIGHT), GUIContent.none, fc.Bits, 0, 32);
+#endif
 						EditorGUI.indentLevel = 0;
 
 						if (fc.Bits != bits)
@@ -384,8 +393,11 @@ namespace emotitron.Compression
 					float sliderwidth = ir.width - PADDING - labelwidth - PADDING; // - sliderleft - PADDING;
 
 					GUI.enabled = false;
+#if UNITY_2019_3_OR_NEWER
+					EditorGUI.IntSlider(new Rect(sliderleft, line, sliderwidth, LINEHEIGHT + 2), GUIContent.none, (int)fc.BitsDeterminedBy, 0, 32);
+#else
 					EditorGUI.IntSlider(new Rect(sliderleft, line, sliderwidth, LINEHEIGHT), GUIContent.none, (int)fc.BitsDeterminedBy, 0, 32);
-					//EditorGUI.IntSlider(new Rect(fieldleft, line, fieldwidth, LINEHEIGHT), GUIContent.none, (int)fc.BitsDeterminedBy, 0, 32);
+#endif
 					GUI.enabled = true;
 
 					break;
@@ -396,9 +408,12 @@ namespace emotitron.Compression
 			line += COMPMTHD_HGHT;
 		}
 
+
+
 		private void DrawBasicRanges()
 		{
-			EditorGUI.LabelField(new Rect(ir.xMin + PADDING, line - 2, labelwidth, LINEHEIGHT), new GUIContent(holdindent < 2 ? "Range:" : "Rng:"), (GUIStyle)"MiniLabel");
+
+			EditorGUI.LabelField(new Rect(ir.xMin + PADDING, line /*- 2*/, labelwidth, LINEHEIGHT), new GUIContent(holdindent < 2 ? "Range:" : "Rng:"), (GUIStyle)"MiniLabel");
 
 			//int holdindent = EditorGUI.indentLevel;
 			//EditorGUI.indentLevel = 0;
@@ -411,9 +426,9 @@ namespace emotitron.Compression
 			float label1Left = input1Left - labelW;
 			float label2Left = input2Left - labelW;
 
-			EditorGUI.LabelField(new Rect(label1Left, line - 2, labelW, LINEHEIGHT), new GUIContent("min: "), miniLabelRight);
+			EditorGUI.LabelField(new Rect(label1Left, line /*- 2*/, labelW, LINEHEIGHT), new GUIContent("min: "), miniLabelRight);
 
-			float min = EditorGUI.DelayedFloatField(new Rect(input1Left, line, inputW, LINEHEIGHT), GUIContent.none, fc.Min, (GUIStyle)"MiniTextField");
+			float min = EditorGUI.DelayedFloatField(new Rect(input1Left, line, inputW, LINEHEIGHT), GUIContent.none, fc.Min, smallFieldStyle);
 
 			if (fc.Min != min)
 			{
@@ -422,9 +437,9 @@ namespace emotitron.Compression
 				fc.Min = min;
 			}
 
-			EditorGUI.LabelField(new Rect(label2Left, line - 2, labelW, LINEHEIGHT), new GUIContent("max: "), miniLabelRight);
+			EditorGUI.LabelField(new Rect(label2Left, line /*- 2*/, labelW, LINEHEIGHT), new GUIContent("max: "), miniLabelRight);
 
-			float max = EditorGUI.DelayedFloatField(new Rect(input2Left, line, inputW, LINEHEIGHT), GUIContent.none, fc.Max, (GUIStyle)"MiniTextField");
+			float max = EditorGUI.DelayedFloatField(new Rect(input2Left, line, inputW, LINEHEIGHT), GUIContent.none, fc.Max, smallFieldStyle);
 
 			if (fc.Max != max)
 			{
@@ -455,8 +470,8 @@ namespace emotitron.Compression
 			float sliderwidth = /*fieldwidth -*/ (input2left - fieldleft) - PADDING;
 
 			//EditorGUI.indentLevel = 0;
-			float minOut = EditorGUI.DelayedFloatField(new Rect(input1left, line, inputWidth, LINEHEIGHT), GUIContent.none, minIn, (GUIStyle)"MiniTextField");
-			float maxOut = EditorGUI.DelayedFloatField(new Rect(input2left, line, inputWidth, LINEHEIGHT), GUIContent.none, maxIn, (GUIStyle)"MiniTextField");
+			float minOut = EditorGUI.DelayedFloatField(new Rect(input1left, line, inputWidth, LINEHEIGHT), GUIContent.none, minIn, smallFieldStyle);
+			float maxOut = EditorGUI.DelayedFloatField(new Rect(input2left, line, inputWidth, LINEHEIGHT), GUIContent.none, maxIn, smallFieldStyle);
 
 			EditorGUI.LabelField(new Rect(input1left, line, inputWidth + degreeSpace, LINEHEIGHT), lbl, (GUIStyle)"RightLabel");
 			EditorGUI.LabelField(new Rect(input2left, line, inputWidth + degreeSpace, LINEHEIGHT), lbl, (GUIStyle)"RightLabel");
