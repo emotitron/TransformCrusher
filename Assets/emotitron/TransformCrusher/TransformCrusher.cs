@@ -376,8 +376,10 @@ namespace emotitron.Compression
 			nonalloc.crusher = this;
 			if (cached_pBits[(int)bcl] > 0)
 				posCrusher.Read(nonalloc.cPos, array, ref bitposition, IncludedAxes.XYZ, bcl);
+
 			if (cached_rBits[(int)bcl] > 0)
 				rotCrusher.Read(nonalloc.cRot, array, ref bitposition, IncludedAxes.XYZ, bcl);
+
 			if (cached_sBits[(int)bcl] > 0)
 				sclCrusher.Read(nonalloc.cScl, array, ref bitposition, IncludedAxes.XYZ, bcl);
 		}
@@ -877,17 +879,24 @@ namespace emotitron.Compression
 				CacheValues();
 
 			nonalloc.crusher = this;
-			if (cached_pBits[0] > 0) posCrusher.Compress(nonalloc.cPos, rb.position);
+			if (cached_pBits[0] > 0)
+			{
+				Vector3 localizedP = (posCrusher.local && rb.transform.parent) ? rb.transform.InverseTransformPoint(rb.position) : rb.position;
+				posCrusher.Compress(nonalloc.cPos, localizedP);
+
+			}
 			else nonalloc.cPos.Clear();
 
 			if (rotCrusher.TRSType == TRSType.Quaternion)
 			{
-				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, rb.rotation);
+				Quaternion localizedQ = (posCrusher.local && rb.transform.parent) ? rb.transform.localRotation : rb.rotation;
+				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, localizedQ);
 				else nonalloc.cRot.Clear();
 			}
 			else
 			{
-				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, rb.rotation.eulerAngles);
+				Vector3 localizedE = (posCrusher.local && rb.transform.parent) ? rb.transform.localEulerAngles : rb.rotation.eulerAngles;
+				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, localizedE);
 				else nonalloc.cRot.Clear();
 			}
 
@@ -916,17 +925,24 @@ namespace emotitron.Compression
 				CacheValues();
 
 			nonalloc.crusher = this;
-			if (cached_pBits[0] > 0) posCrusher.Compress(nonalloc.cPos, rb2d.position);
-			else nonalloc.cPos.Clear();
+			if (cached_pBits[0] > 0)
+			{
+				Vector2 localized = (posCrusher.local && rb2d.transform.parent) ? (Vector2)rb2d.transform.InverseTransformPoint(rb2d.position) : rb2d.position;
+				posCrusher.Compress(nonalloc.cPos, localized);
+			}
+			else
+				nonalloc.cPos.Clear();
 
 			if (rotCrusher.TRSType == TRSType.Quaternion)
 			{
-				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, Quaternion.Euler(0, 0, rb2d.rotation));
+				Quaternion localized = (rotCrusher.local && rb2d.transform.parent) ? rb2d.transform.localRotation : Quaternion.Euler(0, 0, rb2d.rotation);
+				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, localized);
 				else nonalloc.cRot.Clear();
 			}
 			else
 			{
-				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, new Vector3(0, 0, rb2d.rotation));
+				Vector3 localized = (rotCrusher.local && rb2d.transform.parent) ? rb2d.transform.localEulerAngles : new Vector3(0, 0, rb2d.rotation);
+				if (cached_rBits[0] > 0) rotCrusher.Compress(nonalloc.cRot, localized);
 				else nonalloc.cRot.Clear();
 			}
 
@@ -1041,7 +1057,10 @@ namespace emotitron.Compression
 				CacheValues();
 
 			if (cached_pBits[0] > 0)
-				posCrusher.CompressAndWrite(rb.position, buffer, ref bitposition);
+			{
+				Vector3 localized = (posCrusher.local && rb.transform.parent) ? rb.transform.InverseTransformPoint(rb.position) : rb.position;
+				posCrusher.CompressAndWrite(localized, buffer, ref bitposition);
+			}
 			if (cached_rBits[0] > 0)
 			{
 				if (rotCrusher.TRSType == TRSType.Quaternion)
@@ -1136,7 +1155,6 @@ namespace emotitron.Compression
 		}
 
 		#endregion
-
 
 		#region Rigidbody Set/Move
 #if !DISABLE_PHYSICS
@@ -1385,7 +1403,6 @@ namespace emotitron.Compression
 				sclCrusher.Apply(transform, matrix.scale);
 		}
 
-
 		#endregion
 
 		/// <summary>
@@ -1409,7 +1426,7 @@ namespace emotitron.Compression
 		}
 
 		/// <summary>
-		/// Capture the values of a Rigidbody.
+		/// Capture the values of a Transform.
 		/// </summary>
 		/// <param name="m">Lossy decompressed value is stored.</param>
 		public void Capture(Transform tr, CompressedMatrix cm, Matrix m)

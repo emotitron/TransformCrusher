@@ -2,6 +2,7 @@
 
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 
 #if UNITY_EDITOR
@@ -12,7 +13,6 @@ namespace emotitron.Compression
 {
 
 #if UNITY_EDITOR
-
 
 	public abstract class CrusherDrawer : PropertyDrawer
 	{
@@ -27,7 +27,6 @@ namespace emotitron.Compression
 		public const float ACCCNTR_HGHT = LINEHEIGHT /*+ SPACING*/;
 
 		public const int ACTUAL_HGHT = LINEHEIGHT;
-		//public const float ENBLD_HGHT = 62f;
 		public const float BCL_HEIGHT = SPACING + LINEHEIGHT + LINEHEIGHT + LINEHEIGHT + SPACING; /*+ PADDING + SPACING*/
 		public const float DISBL_HGHT = 20f;
 		public const float BTTM_MARGIN = 4;
@@ -58,7 +57,6 @@ namespace emotitron.Compression
 			fieldwidth = paddedwidth - labelwidth;
 			stdfieldwidth = 50f;
 			rightinputsleft = r.xMin + (r.width - stdfieldwidth) - PADDING;
-			//rightinputsleft = paddedright - stdfieldwidth;
 		}
 
 		public void ProFeatureDialog(string extratext)
@@ -66,7 +64,6 @@ namespace emotitron.Compression
 			if (!EditorUtility.DisplayDialog("Pro Version Feature", "Adjustable bits are only available in \nTransform Crusher Pro.", "OK", "Open in Asset Store"))
 				Application.OpenURL("https://assetstore.unity.com/packages/tools/network/transform-crusher-116587");
 		}
-
 	}
 
 	[CustomPropertyDrawer(typeof(FloatCrusher))]
@@ -85,7 +82,6 @@ namespace emotitron.Compression
 		protected int holdindent;
 		protected float colwidths;
 		protected float height;
-		//protected int savedIndentLevel;
 
 		Rect r;
 		bool haschanged;
@@ -113,9 +109,8 @@ namespace emotitron.Compression
 			holdindent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
 
-			// Hackjob way to get the target
-			fc = (FloatCrusher)DrawerUtils.GetParent(property.FindPropertyRelative("_min"));
-			height = CalculateHeight(fc);
+			int hash = fc.GetHashCode();
+			height = CalculateHeight(fc, hash);
 
 			this.r = r;
 
@@ -128,7 +123,6 @@ namespace emotitron.Compression
 				(fc.axis == Axis.Z) ? SolidTextures.blue2D :
 				SolidTextures.gray2D;
 
-			//SolidTextures.DrawTexture(new Rect(ir.xMin - 1, line - 1, ir.width + 2, height + 2), SolidTextures.lowcontrast2D);
 			if (!isWrappedInElementCrusher)
 			{
 				Rect outline = ir;
@@ -145,10 +139,12 @@ namespace emotitron.Compression
 			line++;
 
 			line += SPACING;
-			DrawHeader(r, gc_fc);
+
+			fc.expanded = DrawHeader(r, gc_fc, fc.expanded);
+
 			line += PADDING + HEADR_HGHT;
 
-			if (fc.Enabled)
+			if (fc.Enabled && fc.expanded)
 			{
 				bool noSettings = (fc.BitsDeterminedBy == BitsDeterminedBy.HalfFloat || fc.BitsDeterminedBy == BitsDeterminedBy.Uncompressed || fc.BitsDeterminedBy == BitsDeterminedBy.Disabled);
 
@@ -170,8 +166,6 @@ namespace emotitron.Compression
 
 			}
 
-			//EditorGUI.indentLevel = savedIndentLevel;
-
 			if (haschanged)
 			{
 				EditorUtility.SetDirty(property.serializedObject.targetObject);
@@ -181,8 +175,10 @@ namespace emotitron.Compression
 			EditorGUI.EndProperty();
 		}
 
-		private void DrawHeader(Rect r, GUIContent label)
+		private bool DrawHeader(Rect r, GUIContent label, bool expanded)
 		{
+			const int FOLDOUT = 12;
+
 			GUIContent headertext =
 				new GUIContent((fc.axis == Axis.X) ? (fc.TRSType == TRSType.Euler) ? "X (Pitch)" : "X" :
 				(fc.axis == Axis.Y) ? (fc.TRSType == TRSType.Euler) ? "Y (Yaw)" : "Y" :
@@ -191,13 +187,19 @@ namespace emotitron.Compression
 				label.text,
 
 				label.tooltip
-				); // "Float Crusher";
+				);
 
-			//EditorGUI.indentLevel = holdindent;
-			if (fc.showEnableToggle) //  target.axis != Axis.AlwaysOn)
+
+			if (fc.showEnableToggle)
 			{
-				bool _enabled = GUI.Toggle(new Rect(ir.xMin + PADDING, line, 32, LINEHEIGHT), fc.Enabled, GUIContent.none);
-				EditorGUI.LabelField(new Rect(ir.xMin + PADDING + 16, line, 200, LINEHEIGHT), headertext);
+				bool _enabled = GUI.Toggle(new Rect(ir.xMin + PADDING + FOLDOUT, line, 32, LINEHEIGHT), fc.Enabled, GUIContent.none);
+
+				if (_enabled)
+					expanded = EditorGUI.Toggle(new Rect(ir.xMin + PADDING, line, 12, LINEHEIGHT), expanded, (GUIStyle)"Foldout");
+				else
+					EditorGUI.Toggle(new Rect(ir.xMin + PADDING, line, 12, LINEHEIGHT), false, (GUIStyle)"Foldout");
+
+				EditorGUI.LabelField(new Rect(ir.xMin + PADDING + 16 + FOLDOUT, line, 200, LINEHEIGHT), headertext);
 				if (fc.Enabled != _enabled)
 				{
 					haschanged = true;
@@ -207,13 +209,14 @@ namespace emotitron.Compression
 			}
 			else
 			{
-				EditorGUI.LabelField(new Rect(ir.xMin + PADDING, line, 200, LINEHEIGHT), new GUIContent(headertext));
+				expanded = EditorGUI.Toggle(new Rect(ir.xMin + PADDING, line, 12, LINEHEIGHT), expanded, (GUIStyle)"Foldout");
+				EditorGUI.LabelField(new Rect(ir.xMin + PADDING + FOLDOUT, line, 200, LINEHEIGHT), new GUIContent(headertext));
 			}
 
 			//EditorGUI.indentLevel = 0;
 
 			if (!fc.Enabled)
-				return;
+				return expanded;
 
 			if (fc.TRSType == TRSType.Euler && fc.axis == Axis.X)
 				if (GUI.Button(new Rect(paddedwidth - 70, line, 42, LINEHEIGHT), fc.UseHalfRangeX ? HALFX : FULLX, (GUIStyle)"minibutton"))
@@ -226,6 +229,8 @@ namespace emotitron.Compression
 			//Debug.Log("BITS?? "+ fc.Bits + " _bits:" + p.FindPropertyRelative("_bits").GetArrayElementAtIndex(0).intValue);
 			String bitstr = fc.Bits + " Bits";
 			EditorGUI.LabelField(new Rect(paddedleft, line, paddedwidth, LINEHEIGHT), bitstr, miniLabelRight);
+
+			return expanded;
 		}
 
 		private void DrawCodecSettings(SerializedProperty p)
@@ -277,20 +282,8 @@ namespace emotitron.Compression
 				fc.AccurateCenter = zeroToggle;
 			}
 
-			//GUIContent showBclContent = new GUIContent("Show BCL","Show Bit Culling Level details for this crusher.");
-
-			//EditorGUI.LabelField(new Rect(paddedright - 60, line, 60, LINEHEIGHT), showBclContent, (GUIStyle)"MiniLabel");
-			//bool bclToggle = EditorGUI.Toggle(new Rect(paddedright - 76, line, 16, LINEHEIGHT), GUIContent.none, fc.expandBCL, (GUIStyle)"OL Toggle");
-			//if (fc.expandBCL != bclToggle)
-			//{
-			//	haschanged = true;
-			//	Undo.RecordObject(p.serializedObject.targetObject, "Toggle Show BCL Details");
-			//	fc.expandBCL = bclToggle;
-			//}
-
 			line += ACCCNTR_HGHT;
 		}
-
 
 		private void DrawCompressionMethod()
 		{
@@ -398,25 +391,19 @@ namespace emotitron.Compression
 #else
 					EditorGUI.IntSlider(new Rect(sliderleft, line, sliderwidth, LINEHEIGHT), GUIContent.none, (int)fc.BitsDeterminedBy, 0, 32);
 #endif
+					//EditorGUI.IntSlider(new Rect(fieldleft, line, fieldwidth, LINEHEIGHT), GUIContent.none, (int)fc.BitsDeterminedBy, 0, 32);
 					GUI.enabled = true;
 
 					break;
 			}
 
-			//EditorGUI.indentLevel = holdindent;
-
 			line += COMPMTHD_HGHT;
 		}
-
-
 
 		private void DrawBasicRanges()
 		{
 
 			EditorGUI.LabelField(new Rect(ir.xMin + PADDING, line /*- 2*/, labelwidth, LINEHEIGHT), new GUIContent(holdindent < 2 ? "Range:" : "Rng:"), (GUIStyle)"MiniLabel");
-
-			//int holdindent = EditorGUI.indentLevel;
-			//EditorGUI.indentLevel = 0;
 
 			const float labelW = 48f;
 			const float inputW = 50f;
@@ -454,22 +441,18 @@ namespace emotitron.Compression
 		public struct MinMax { public float min; public float max; }
 		private MinMax DrawMinMaxSlider(float minIn, float maxIn, float minLimit, float maxLimit, bool showDegrees = true)
 		{
-			//int holdindent = EditorGUI.indentLevel;
-
 			const float input1offset = 10;
 			float inputWidth = (holdindent < 2) ? (showDegrees ? 40f : 50f) : showDegrees ? 30f : 40f;
 			float degreeSpace = showDegrees ? 10f : 0;
 			GUIContent lbl = showDegrees ? new GUIContent("°") : GUIContent.none;
 
-			//float sliderwidth = fieldwidth - inputWidth + input1offset - PADDING * 2 - degreeSpace * 2;
 			float left = r.xMin;
 
 			float input1left = fieldleft - inputWidth - input1offset;
 			float input2left = rightinputsleft;
-			float sliderleft = fieldleft /*- input1offset + PADDING */ /*+ degreeSpace*/; // + fieldwidth + padding;
-			float sliderwidth = /*fieldwidth -*/ (input2left - fieldleft) - PADDING;
+			float sliderleft = fieldleft;
+			float sliderwidth = (input2left - fieldleft) - PADDING;
 
-			//EditorGUI.indentLevel = 0;
 			float minOut = EditorGUI.DelayedFloatField(new Rect(input1left, line, inputWidth, LINEHEIGHT), GUIContent.none, minIn, smallFieldStyle);
 			float maxOut = EditorGUI.DelayedFloatField(new Rect(input2left, line, inputWidth, LINEHEIGHT), GUIContent.none, maxIn, smallFieldStyle);
 
@@ -477,7 +460,6 @@ namespace emotitron.Compression
 			EditorGUI.LabelField(new Rect(input2left, line, inputWidth + degreeSpace, LINEHEIGHT), lbl, (GUIStyle)"RightLabel");
 
 			EditorGUI.MinMaxSlider(new Rect(sliderleft, line - 1, sliderwidth, LINEHEIGHT), ref minOut, ref maxOut, minLimit, maxLimit);
-			//EditorGUI.indentLevel = holdindent;
 
 			return new MinMax() { min = minOut, max = maxOut };
 		}
@@ -513,10 +495,9 @@ namespace emotitron.Compression
 
 		private void DrawActualValues()
 		{
-			//EditorGUI.DrawRect(new Rect(r.xMin, r.yMin + ENBLD_HGHT - FOOTHGHT, r.width, FOOTHGHT), usedcolor * .9f);
 			EditorGUI.LabelField(new Rect(paddedleft, line, paddedwidth, ACTUAL_HGHT), ((holdindent < 2) ? GC_ACTUAL_LONG : GUIContent.none), miniFadedLabel);
 
-			float prec = fc.GetPrecAtBits();// fc.Precision;
+			float prec = fc.GetPrecAtBits();
 			float res = fc.GetResAtBits();
 			// restrict prec to 5 characters
 			string resstr = res.ToString((res < 0) ? "0.0000" : (res > 9999) ? "E2" : "F4");
@@ -534,7 +515,7 @@ namespace emotitron.Compression
 		{
 
 			EditorGUI.LabelField(new Rect(paddedleft + 12, line, 60, LINEHEIGHT), showBclContent, (GUIStyle)"MiniLabel");
-			//bool bclToggle = EditorGUI.Foldout(new Rect(paddedleft, line, 16, LINEHEIGHT), fc.expandBCL, GUIContent.none/*, (GUIStyle)"OL Toggle"*/);
+
 			bool bclToggle = EditorGUI.Toggle(new Rect(paddedleft, line, 32, LINEHEIGHT), GUIContent.none, fc.expandBCL, (GUIStyle)"Foldout");
 
 			if (fc.expandBCL != bclToggle)
@@ -562,8 +543,6 @@ namespace emotitron.Compression
 			line += LINEHEIGHT;
 			if (!fc.expandBCL)
 				return;
-
-			//SolidTextures.DrawTexture(new Rect(paddedleft, line -1, paddedwidth, 1), SolidTextures.contrastgray2D);
 
 			EditorGUI.LabelField(new Rect(paddedleft, line, labelw, LINEHEIGHT), "bits", (GUIStyle)"MiniLabel");
 
@@ -623,14 +602,16 @@ namespace emotitron.Compression
 				lines += LINEHEIGHT;
 				var rng = (double)Math.Abs(fc.Max - fc.Min);
 				string str = ((fc.GetBits(bcl) == 0) ? 0 : (rng / Math.Pow(2, fc.Bits - fc.GetBits(bcl)))).ToString("####0.#####");
-				EditorGUI.LabelField(new Rect(left /*- offset*/, lines, fldWdth4th, LINEHEIGHT), str, (GUIStyle)"ProjectBrowserGridLabel");
+				EditorGUI.LabelField(new Rect(left, lines, fldWdth4th, LINEHEIGHT), str, (GUIStyle)"ProjectBrowserGridLabel");
 			}
 
 			EditorGUI.indentLevel = holdindent;
 		}
 
-		private float CalculateHeight(FloatCrusher fc)
+		private float CalculateHeight(FloatCrusher fc, int hash)
 		{
+			
+
 			bool noSettings = (fc.BitsDeterminedBy == BitsDeterminedBy.HalfFloat || fc.BitsDeterminedBy == BitsDeterminedBy.Uncompressed || fc.BitsDeterminedBy == BitsDeterminedBy.Disabled);
 			bool noRange = fc.TRSType == TRSType.Normal;
 
@@ -639,17 +620,18 @@ namespace emotitron.Compression
 			float settingsLen = (noSettings) ? 0 : (noRange ? 0 : SETTINGS_HGHT) + ACCCNTR_HGHT + ACTUAL_HGHT + bclLine;
 
 			return PADDING + HEADR_HGHT + PADDING +
-				(fc.Enabled ?
-				COMPMTHD_HGHT + ((noSettings) ? 0 : settingsLen) :
+				(fc.Enabled && fc.expanded ?
+				(COMPMTHD_HGHT + ((noSettings) ? 0 : settingsLen)) :
 				0);
 		}
+
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
 			// Hackjob way to get the target - needs to reference a serialized field in order to work.
 			fc = (FloatCrusher)DrawerUtils.GetParent(property.FindPropertyRelative("_min"));
-
-			return CalculateHeight(fc);
+			int hash = fc.GetHashCode();
+			return CalculateHeight(fc, hash);
 		}
 	}
 

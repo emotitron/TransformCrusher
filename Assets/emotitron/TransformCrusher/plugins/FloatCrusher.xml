@@ -85,7 +85,7 @@
         </member>
         <member name="F:emotitron.Compression.FloatCrusher.staticFloatCrushers">
             <summary>
-            Experimental storage of unchaning crushers indexed by their hashcode - for future use to eliminate redundancies
+            Experimental storage of unchanging crushers indexed by their hashcode - for future use to eliminate redundancies
             </summary>
         </member>
         <member name="M:emotitron.Compression.FloatCrusher.GetStaticFloatCrusher(emotitron.Compression.BitPresets,System.Single,System.Single,emotitron.Compression.Axis,emotitron.Compression.TRSType)">
@@ -107,11 +107,6 @@
             Creates a new crusher, then checks to see if its hashcode exists in the static dictionary already. If it exists the existing crusher is returned
             and the created crusher gets garbage collected. Otherwise the new crusher is added to the hash dictionary.
             </summary>
-            <param name="resolution"></param>
-            <param name="min"></param>
-            <param name="max"></param>
-            <param name="axis"></param>
-            <param name="trstype"></param>
             <returns>A shared float crusher with the indicated. WARNING: There are no controls in place to stop you from changing the values of this crusher, but they should not be changed.
             The static FloatCrusher is indexed by its hashcode, and any changes will make that hashcode no longer valid.
             </returns>
@@ -351,7 +346,7 @@
         </member>
         <member name="M:emotitron.Compression.FloatCrusher.#ctor(System.Int32,System.Single,System.Single,emotitron.Compression.Axis,emotitron.Compression.TRSType,System.Boolean)">
             <summary>
-            Note: bits will be rounded up to the next valid preset in the Free version. In PRO, bits can be any value from 2-32.
+            Constructor.
             </summary>
         </member>
         <member name="M:emotitron.Compression.FloatCrusher.#ctor(emotitron.Compression.BitPresets,System.Single,System.Single,emotitron.Compression.Axis,emotitron.Compression.TRSType,System.Boolean)">
@@ -435,13 +430,6 @@
             <param name="min"></param>
             <param name="max"></param>
             <param name="rez"></param>
-            <returns></returns>
-        </member>
-        <member name="M:emotitron.Compression.FloatCrusher.RoundBitsToBestPreset(System.Int32)">
-            <summary>
-            Rounds a bit count up to the nearest level available in the Free version of FloatCrusher.
-            </summary>
-            <param name="bits"></param>
             <returns></returns>
         </member>
         <member name="M:emotitron.Compression.FloatCrusher.GetBitsForMaxValue(System.UInt32)">

@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using System.Collections.ObjectModel;
+using emotitron.Utilities;
 
 
 #if UNITY_EDITOR
@@ -175,7 +176,7 @@ namespace emotitron.Compression
 		#region Inspector
 
 #if UNITY_EDITOR
-		public bool isExpanded = false;
+		public bool isExpanded = true;
 #endif
 		public bool hideFieldName = false;
 
@@ -530,12 +531,13 @@ namespace emotitron.Compression
 
 		public override void OnAfterDeserialize()
 		{
-			ApplyWorldCrusherSettings();
-			CacheValues();
+			//ApplyWorldCrusherSettings();
+			//CacheValues();
 		}
 
 		public void CacheValues()
 		{
+			ApplyWorldCrusherSettings();
 
 #if !UNITY_EDITOR
 			NullUnusedCrushers();
@@ -637,6 +639,19 @@ namespace emotitron.Compression
 					return _ucrusher.Enabled;
 
 				return _xcrusher.Enabled | _ycrusher.Enabled | _zcrusher.Enabled;
+			}
+			set
+			{
+				if (TRSType == TRSType.Quaternion)
+					_qcrusher.Enabled = value;
+
+				else if (TRSType == TRSType.Scale && uniformAxes != 0)
+					_ucrusher.Enabled = value;
+
+				_xcrusher.Enabled = value;
+				_ycrusher.Enabled = value;
+				_zcrusher.Enabled = value;
+				//CacheValues();
 			}
 		}
 
@@ -2019,30 +2034,52 @@ namespace emotitron.Compression
 
 					if (cache_qEnabled)
 					{
-						rb.MoveRotation(e.quat);
-						//rb.rotation = e.quat;
+						if (local && rb.transform.parent)
+						{
+							rb.transform.localRotation = e.quat;
+						}
+						else
+						{
+							rb.MoveRotation(e.quat);
+						}
 					}
-
 					return;
 
 				case TRSType.Position:
 
-					//rb.position = new Vector3(
+					var localized = (local & rb.transform.parent) ? rb.transform.TransformPoint(e.v) : e.v;
+					var curr = rb.position;
+
 					rb.MovePosition(new Vector3(
-						cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : rb.position.x,
-						cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : rb.position.y,
-						cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb.position.z
+						cache_xEnabled && ((int)ia & 1) != 0 ? localized.x : curr.x,
+						cache_yEnabled && ((int)ia & 2) != 0 ? localized.y : curr.y,
+						cache_zEnabled && ((int)ia & 4) != 0 ? localized.z : curr.z
 						));
 					return;
 
 				case TRSType.Euler:
 
-					//rb.rotation = Quaternion.Euler(
-					rb.MoveRotation(Quaternion.Euler(
-						cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : rb.rotation.eulerAngles.x,
-						cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : rb.rotation.eulerAngles.y,
-						cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb.rotation.eulerAngles.z
-						));
+					var currE = rb.rotation.eulerAngles;
+
+					if (local && rb.transform.parent)
+					{
+						//rb.rotation = Quaternion.Euler(
+						rb.transform.eulerAngles = new Vector3(
+							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : currE.x,
+							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : currE.y,
+							cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : currE.z
+							);
+					}
+					else
+					{
+						//rb.rotation = Quaternion.Euler(
+						rb.MoveRotation(Quaternion.Euler(
+							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : currE.x,
+							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : currE.y,
+							cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : currE.z
+							));
+					}
+
 					return;
 
 				default:
@@ -2084,27 +2121,47 @@ namespace emotitron.Compression
 
 						if (cache_qEnabled)
 						{
-							rb.MoveRotation(e.quat);
+							if (local && rb.transform.parent)
+								rb.transform.localRotation = e.quat;
+							else
+								rb.MoveRotation(e.quat);
 						}
-
 						return;
 
 					case TRSType.Position:
 
+						var localized = (local & rb.transform.parent) ? rb.transform.TransformPoint(e.v) : e.v;
+
 						rb.MovePosition(new Vector3(
-							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : rb.position.x,
-							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : rb.position.y,
-							cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb.position.z
+							cache_xEnabled && ((int)ia & 1) != 0 ? localized.x : rb.position.x,
+							cache_yEnabled && ((int)ia & 2) != 0 ? localized.y : rb.position.y,
+							cache_zEnabled && ((int)ia & 4) != 0 ? localized.z : rb.position.z
 							));
 						return;
 
 					case TRSType.Euler:
 
-						rb.MoveRotation(Quaternion.Euler(
-							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : rb.rotation.eulerAngles.x,
-							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : rb.rotation.eulerAngles.y,
-							cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb.rotation.eulerAngles.z
-							));
+						var currE = rb.rotation.eulerAngles;
+
+						if (local && rb.transform.parent)
+						{
+							//rb.rotation = Quaternion.Euler(
+							rb.transform.eulerAngles = new Vector3(
+								cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : currE.x,
+								cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : currE.y,
+								cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : currE.z
+								);
+						}
+						else
+						{
+							//rb.rotation = Quaternion.Euler(
+							rb.MoveRotation(Quaternion.Euler(
+								cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : currE.x,
+								cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : currE.y,
+								cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : currE.z
+								));
+						}
+
 						return;
 
 					default:
@@ -2159,26 +2216,47 @@ namespace emotitron.Compression
 
 						if (cache_qEnabled)
 						{
-							rb.rotation = e.quat;
+							if (local && rb.transform.parent)
+								rb.transform.localRotation = e.quat;
+							else
+								rb.rotation = e.quat;
 						}
 
 						return;
 
 					case TRSType.Position:
 
+						var localized = (local & rb.transform.parent) ? rb.transform.TransformPoint(e.v) : e.v;
+						var currP = rb.position;
+
 						rb.position = new Vector3(
-							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : rb.position.x,
-							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : rb.position.y,
-							cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb.position.z);
+							cache_xEnabled && ((int)ia & 1) != 0 ? localized.x : currP.x,
+							cache_yEnabled && ((int)ia & 2) != 0 ? localized.y : currP.y,
+							cache_zEnabled && ((int)ia & 4) != 0 ? localized.z : currP.z);
+
 						return;
 
 					case TRSType.Euler:
 
-						rb.rotation = Quaternion.Euler(
-							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : rb.rotation.eulerAngles.x,
-							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : rb.rotation.eulerAngles.y,
-							cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb.rotation.eulerAngles.z);
+						var currE = rb.rotation.eulerAngles;
+
+						if (local && rb.transform.parent)
+						{
+							rb.transform.eulerAngles = new Vector3(
+								cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : currE.x,
+								cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : currE.y,
+								cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : currE.z
+								);
+						}
+						else
+						{
+							rb.rotation = Quaternion.Euler(
+							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : currE.x,
+							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : currE.y,
+							cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : currE.z);
+						}
 						return;
+
 
 					default:
 						Debug.LogError("Are you trying to Apply scale to a Rigidbody?");
@@ -2207,21 +2285,32 @@ namespace emotitron.Compression
 
 						if (cache_qEnabled)
 						{
-							rb2d.rotation = e.quat.z;
+							if (local && rb2d.transform.parent)
+								rb2d.transform.localRotation = e.quat;
+							else
+								rb2d.rotation = e.quat.z;
 						}
 
 						return;
 
 					case TRSType.Position:
 
+						var localized = (local & rb2d.transform.parent) ? rb2d.transform.TransformPoint(e.v) : e.v;
+
 						rb2d.position = new Vector2(
-							cache_xEnabled && ((int)ia & 1) != 0 ? e.v.x : rb2d.position.x,
-							cache_yEnabled && ((int)ia & 2) != 0 ? e.v.y : rb2d.position.y);
+							cache_xEnabled && ((int)ia & 1) != 0 ? localized.x : rb2d.position.x,
+							cache_yEnabled && ((int)ia & 2) != 0 ? localized.y : rb2d.position.y);
 						return;
 
 					case TRSType.Euler:
-
-						rb2d.rotation = cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb2d.rotation;
+						if (local && rb2d.transform.parent)
+						{
+							rb2d.transform.localEulerAngles = new Vector3(0, 0, (cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb2d.rotation));
+						}
+						else
+						{
+							rb2d.rotation = cache_zEnabled && ((int)ia & 4) != 0 ? e.v.z : rb2d.rotation;
+						}
 						return;
 
 					default:
@@ -2606,8 +2695,6 @@ namespace emotitron.Compression
 
 		public override void OnGUI(Rect r, SerializedProperty property, GUIContent label)
 		{
-			EditorGUI.BeginProperty(r, label, property);
-
 			haschanged = false;
 
 			bool isWorldBounds = label.text.Contains("World Bounds");
@@ -2766,8 +2853,6 @@ namespace emotitron.Compression
 
 			EditorGUI.LabelField(new Rect(paddedleft, currentline, paddedwidth, 16), target.TallyBits() + " Bits", miniLabelRight);
 
-
-
 			// Scale Uniform Enum
 			if (target.TRSType == TRSType.Scale)
 			{
@@ -2821,19 +2906,15 @@ namespace emotitron.Compression
 						propr.yMin += yh;
 						EditorGUI.PropertyField(propr, z, fcgc);
 					}
-
 				}
 			}
 
 			if (haschanged)
 			{
 				EditorUtility.SetDirty(property.serializedObject.targetObject);
-				//AssetDatabase.SaveAssets();
 			}
 
 			EditorGUI.indentLevel = holdindent;
-
-			EditorGUI.EndProperty();
 		}
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

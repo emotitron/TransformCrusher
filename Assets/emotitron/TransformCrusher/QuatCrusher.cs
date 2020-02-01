@@ -417,7 +417,12 @@ namespace emotitron.Compression
 			//var bitssp = property.FindPropertyRelative("bits");
 
 			GUI.enabled = (QC_ISPRO);
+#if UNITY_2019_3_OR_NEWER
+			int newbits = EditorGUI.IntSlider(new Rect(fieldleft, line, fieldwidth, LINEHEIGHT+ 2),  GUIContent.none, target.Bits, 16, 64);
+#else
 			int newbits = EditorGUI.IntSlider(new Rect(fieldleft, line, fieldwidth, LINEHEIGHT),  GUIContent.none, target.Bits, 16, 64);
+#endif
+
 			//bool bitschanged = EditorGUI.PropertyField(new Rect(fieldleft, line, fieldwidth, LINEHEIGHT), bitssp, GUIContent.none);
 			GUI.enabled = true;
 
@@ -485,4 +490,4 @@ namespace emotitron.Compression
 		}
 	}
 #endif
-}
+		}

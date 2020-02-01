@@ -28,7 +28,7 @@ namespace emotitron.Compression
 			gc.text = label.text;
 			gc.tooltip = label.tooltip;
 
-			EditorGUI.BeginProperty(r, label, property);
+			//EditorGUI.BeginProperty(r, label, property);
 			base.OnGUI(r, property, label);
 
 			//property.serializedObject.ApplyModifiedProperties();
@@ -49,10 +49,9 @@ namespace emotitron.Compression
 			float rh = EditorGUI.GetPropertyHeight(rot);
 			float sh = EditorGUI.GetPropertyHeight(scl);
 
-			
-			/// Header
 
-			bool _isExpanded = EditorGUI.Foldout(new Rect(r.xMin, currentline, r.width, TITL_HGHT), isExpanded.boolValue, "");
+			/// Header
+			bool _isExpanded = EditorGUI.Toggle(new Rect(r.xMin - 12, currentline, r.width, TITL_HGHT), GUIContent.none, isExpanded.boolValue, (GUIStyle)"Foldout");
 			if (isExpanded.boolValue != _isExpanded)
 			{
 				isExpanded.boolValue = _isExpanded;
@@ -101,7 +100,7 @@ namespace emotitron.Compression
 				/// TRS Element Boxes
 				currentline += TITL_HGHT;
 				//float leftConnectorY = currentline;
-				
+
 
 				DrawSet(r, currentline, ph, pos);
 				currentline += ph + SET_PAD;
@@ -118,7 +117,7 @@ namespace emotitron.Compression
 			}
 
 
-			EditorGUI.EndProperty();
+			//EditorGUI.EndProperty();
 
 		}
 
@@ -128,7 +127,7 @@ namespace emotitron.Compression
 			//SolidTextures.DrawTexture(new Rect(4, currentline + 4, r.width, h - 12), SolidTextures.lowcontrast2D);
 			//EditorGUI.LabelField(new Rect(2, currentline + 4, 4, h - 12), GUIContent.none, (GUIStyle)"MiniSliderVertical");
 
-			EditorGUI.PropertyField(new Rect(r.xMin, currentline, r.width , h), prop);
+			EditorGUI.PropertyField(new Rect(r.xMin, currentline, r.width, h), prop);
 		}
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
