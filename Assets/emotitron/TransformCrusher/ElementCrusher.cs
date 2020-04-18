@@ -1758,6 +1758,82 @@ namespace emotitron.Compression
 				CompressAndWrite(e.v, buffer, ref bitposition);
 		}
 
+		public void Compress(CompressedElement nonalloc, Rigidbody rb, IncludedAxes ia = IncludedAxes.XYZ)
+		{
+			if (!cached)
+				CacheValues();
+
+			switch (_trsType)
+			{
+				case TRSType.Scale:
+					{
+						Compress(nonalloc, local ? rb.transform.localScale : rb.transform.lossyScale, ia);
+						break;
+					}
+
+				case TRSType.Quaternion:
+					if (cache_qEnabled)
+					{
+						Quaternion localizedQ;
+						if (local)
+						{
+							var par = rb.transform.parent;
+							localizedQ = (par) ? (Quaternion.Inverse(par.rotation) * rb.rotation) : rb.rotation;
+						}
+						else
+							localizedQ = rb.rotation;
+
+						nonalloc.Set(this, _qcrusher.Compress(localizedQ));
+					}
+
+					break;
+
+				case TRSType.Euler:
+					{
+						Vector3 localizedE;
+						if (local)
+						{
+							var par = rb.transform.parent;
+							localizedE = (par) ? (Quaternion.Inverse(par.rotation) * rb.rotation).eulerAngles : rb.rotation.eulerAngles;
+						}
+						else
+							localizedE = rb.rotation.eulerAngles;
+
+						CompressedFloat cx = (cache_xEnabled && ((int)ia & 1) != 0 ? _xcrusher.Compress(localizedE.x) : new CompressedFloat());
+						CompressedFloat cy = (cache_yEnabled && ((int)ia & 2) != 0 ? _ycrusher.Compress(localizedE.y) : new CompressedFloat());
+						CompressedFloat cz = (cache_zEnabled && ((int)ia & 4) != 0 ? _zcrusher.Compress(localizedE.z) : new CompressedFloat());
+						nonalloc.Set(this, cx, cy, cz);
+
+						break;
+					}
+
+				case TRSType.Position:
+					{
+						Vector3 localizedP;
+						if (local)
+						{
+							var par = rb.transform.parent;
+							localizedP = (par) ? par.InverseTransformPoint(rb.position) : rb.position;
+						}
+						else
+							localizedP = rb.position;
+
+						CompressedFloat cx = (cache_xEnabled && ((int)ia & 1) != 0 ? _xcrusher.Compress(localizedP.x) : new CompressedFloat());
+						CompressedFloat cy = (cache_yEnabled && ((int)ia & 2) != 0 ? _ycrusher.Compress(localizedP.y) : new CompressedFloat());
+						CompressedFloat cz = (cache_zEnabled && ((int)ia & 4) != 0 ? _zcrusher.Compress(localizedP.z) : new CompressedFloat());
+						nonalloc.Set(this, cx, cy, cz);
+
+						break;
+					}
+
+				default:
+					{
+						nonalloc.Clear();
+						break;
+					}
+			}
+		}
+
 		public void Compress(CompressedElement nonalloc, Vector3 v, IncludedAxes ia = IncludedAxes.XYZ)
 		{
 			if (!cached)
@@ -1771,15 +1847,11 @@ namespace emotitron.Compression
 			}
 			else if (_trsType == TRSType.Scale && uniformAxes != UniformAxes.NonUniform)
 			{
-				//Debug.Log(this + " Compress <b>UNIFORM</b>");
 				if (cache_uEnabled)
 					nonalloc.Set(this, _ucrusher.Compress((uniformAxes == UniformAxes.YZ) ? v.y : v.x));
 			}
-
 			else
 			{
-				//FloatCrusherUtilities.CheckBitCount(xcrusher.GetBits(0) + ycrusher.GetBits(0) + zcrusher.GetBits(0), 96);
-
 				CompressedFloat cx = (cache_xEnabled && ((int)ia & 1) != 0 ? _xcrusher.Compress(v.x) : new CompressedFloat());
 				CompressedFloat cy = (cache_yEnabled && ((int)ia & 2) != 0 ? _ycrusher.Compress(v.y) : new CompressedFloat());
 				CompressedFloat cz = (cache_zEnabled && ((int)ia & 4) != 0 ? _zcrusher.Compress(v.z) : new CompressedFloat());
@@ -2122,7 +2194,8 @@ namespace emotitron.Compression
 						if (cache_qEnabled)
 						{
 							if (local && rb.transform.parent)
-								rb.transform.localRotation = e.quat;
+								rb.MoveRotation(rb.transform.parent.rotation * e.quat);
+							//rb.transform.localRotation = e.quat;
 							else
 								rb.MoveRotation(e.quat);
 						}
@@ -2217,7 +2290,8 @@ namespace emotitron.Compression
 						if (cache_qEnabled)
 						{
 							if (local && rb.transform.parent)
-								rb.transform.localRotation = e.quat;
+								rb.rotation = rb.transform.parent.rotation * e.quat;
+							//rb.transform.localRotation = e.quat;
 							else
 								rb.rotation = e.quat;
 						}
